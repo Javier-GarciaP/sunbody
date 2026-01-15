@@ -201,11 +201,12 @@ export default function TransactionsPage() {
                         placeholder="Buscar por cliente..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="bg-transparent border-none outline-none text-slate-900 dark:text-white font-medium w-full placeholder-slate-400"
+                        className="bg-transparent border-none outline-none text-slate-900 dark:text-white font-bold w-full placeholder-slate-400 py-2"
                     />
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs font-black uppercase tracking-wider">
                             <tr>
@@ -252,7 +253,6 @@ export default function TransactionsPage() {
                                     </td>
                                 </tr>
                             ))}
-
                             {filteredTransactions.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="p-12 text-center text-slate-400 font-bold">
@@ -262,6 +262,61 @@ export default function TransactionsPage() {
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {filteredTransactions.map((t) => (
+                            <div key={t.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-slate-900 dark:text-white text-base">{t.customer}</span>
+                                        <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                            <span>{t.date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                            <span className="uppercase tracking-tight">{t.note}</span>
+                                        </div>
+                                    </div>
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide
+                                        ${t.type === 'PAYMENT' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                                            t.type === 'SALE_CREDIT' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                                                'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                                        }
+                                    `}>
+                                        {t.type === 'PAYMENT' ? 'Abono' : t.type === 'SALE_CREDIT' ? 'Crédito' : 'Contado'}
+                                    </span>
+                                </div>
+
+                                <div className="flex justify-between items-end mt-3">
+                                    <div className="text-xs text-slate-500 font-medium">
+                                        {t.items_count > 0 && <span>{t.items_count} productos</span>}
+                                    </div>
+                                    <div className="text-right">
+                                        {t.paid_cop > 0 && (
+                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                Rec: ${t.paid_cop.toLocaleString()}
+                                            </div>
+                                        )}
+                                        {t.total_value > 0 ? (
+                                            <div className="text-lg font-black text-slate-900 dark:text-white leading-none mt-1">
+                                                ${t.total_value.toLocaleString()}
+                                            </div>
+                                        ) : (
+                                            <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 leading-none mt-1">
+                                                + ${t.paid_cop.toLocaleString()}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {filteredTransactions.length === 0 && (
+                            <div className="p-12 text-center text-slate-400 font-bold">
+                                No se encontraron transacciones
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

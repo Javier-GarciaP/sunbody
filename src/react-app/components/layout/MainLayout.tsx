@@ -31,7 +31,7 @@ export default function MainLayout() {
     const currentPage = navItems.find(i => i.path === location.pathname);
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900 font-sans overflow-hidden transition-colors duration-200">
+        <div className="flex h-dvh bg-gray-50 dark:bg-gray-900 font-sans overflow-hidden transition-colors duration-200 selection:bg-brand-500/20">
 
             {/* Desktop Sidebar - Hidden on Mobile */}
             <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 z-50">
@@ -97,7 +97,7 @@ export default function MainLayout() {
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-gray-50 dark:bg-gray-900">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-gray-50 dark:bg-gray-900 relative">
                 {/* Desktop Header / Top Bar */}
                 <header className="h-16 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-sm md:flex hidden">
                     <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm">
@@ -122,25 +122,29 @@ export default function MainLayout() {
                 </header>
 
                 {/* Mobile Header (Simplified) */}
-                <header className="md:hidden h-14 bg-white dark:bg-gray-950 flex items-center px-4 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 z-20">
-                    <span className="font-bold text-gray-900 dark:text-white text-lg">Sumbody</span>
+                <header className="md:hidden h-14 shrink-0 bg-white dark:bg-gray-950 flex items-center px-4 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 z-20 shadow-sm">
+                    <span className="font-bold text-gray-900 dark:text-white text-lg tracking-tight">Sumbody</span>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                            className="p-2 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
                         >
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
-                        <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-brand-700 dark:text-brand-300 text-sm font-bold border border-brand-200 dark:border-brand-800">
+                        <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-brand-700 dark:text-brand-300 text-sm font-bold border border-brand-200 dark:border-brand-800 ring-2 ring-transparent ring-offset-2 dark:ring-offset-gray-900">
                             {user?.displayName?.substring(0, 1).toUpperCase() || 'A'}
                         </div>
                     </div>
                 </header>
 
 
-                {/* Page Content */}
-                <main className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 p-4 md:p-8 pb-32 md:pb-8">
-                    <div className="max-w-7xl mx-auto h-full">
+                {/* Page Content - with pb safe for mobile nav */}
+                {/* For POS page, we want NO padding and NO scroll on main, so POSPage deals with it */}
+                <main className={`flex-1 flex flex-col min-w-0 min-h-0 relative ${location.pathname === '/pos'
+                    ? 'overflow-hidden p-0 h-full'
+                    : 'overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overscroll-contain p-4 md:p-8 pb-[100px] md:pb-8'
+                    }`}>
+                    <div className={`flex flex-col min-h-0 mx-auto w-full ${location.pathname === '/pos' ? 'max-w-none h-full flex-1' : 'max-w-7xl h-auto flex-1'}`}>
                         <Outlet />
                     </div>
                 </main>

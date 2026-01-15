@@ -27,7 +27,7 @@ export default function ExchangeRateWidget() {
   if (!rate) return null;
 
   return (
-    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 rounded-2xl p-4 md:p-6 text-white shadow-lg relative overflow-hidden group md:hover:scale-[1.02] transition-transform duration-300">
       <div className="absolute top-0 right-0 p-8 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-white/20 transition-colors"></div>
 
       <div className="relative z-10 flex items-center justify-between mb-4">

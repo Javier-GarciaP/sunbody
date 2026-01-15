@@ -180,13 +180,13 @@ export default function POSPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-3.5rem)] overflow-hidden bg-slate-50 dark:bg-[#0f111a]">
+        <div className="relative w-full h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-[#0f111a] isolate">
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
 
                 {/* Product Search & Grid */}
-                <div className="flex-1 flex flex-col min-w-0">
+                <div className="flex-1 flex flex-col min-w-0 min-h-0">
 
                     {/* Header: Search & Categories */}
                     <div className="p-4 bg-white dark:bg-[#1a1c2c] border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 space-y-4">
@@ -198,7 +198,7 @@ export default function POSPage() {
                                     placeholder="Buscar producto..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-100 dark:bg-slate-900 border-none rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-semibold transition-all"
+                                    className="w-full pl-12 pr-4 py-2.5 md:py-3.5 bg-slate-100 dark:bg-slate-900 border-none rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-semibold transition-all text-base"
                                 />
                             </div>
 
@@ -229,7 +229,7 @@ export default function POSPage() {
                         </div>
 
                         {/* Category Tabs */}
-                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 snap-x">
                             {categories.map(cat => (
                                 <button
                                     key={cat}
@@ -245,8 +245,10 @@ export default function POSPage() {
                         </div>
                     </div>
 
-                    {/* Product List/Grid */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+                    <div
+                        className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 custom-scrollbar pb-[140px] md:pb-6"
+                        style={{ WebkitOverflowScrolling: 'touch' }}
+                    >
                         {filteredProducts.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
@@ -393,22 +395,22 @@ export default function POSPage() {
                 )}
 
                 {/* Mobile Bottom Sheet Content */}
-                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[70] transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} max-h-[90vh] flex flex-col shadow-2xl-top`}>
-                    <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-4" />
+                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[70] transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} h-[85dvh] flex flex-col shadow-2xl-top`}>
+                    <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-4 shrink-0" />
 
-                    <div className="px-6 pb-2 flex justify-between items-center">
+                    <div className="px-6 pb-2 flex justify-between items-center shrink-0">
                         <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                             Ticket Actual
                         </h2>
                         <button
                             onClick={() => setIsCartOpen(false)}
-                            className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
+                            className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:bg-slate-200"
                         >
                             <X size={20} />
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar overscroll-contain">
                         <CartContent
                             cart={cart}
                             setCart={setCart}
@@ -431,7 +433,6 @@ export default function POSPage() {
                             setPaidVes={setPaidVes}
                         />
                     </div>
-                    <div className="h-6" /> {/* Spacer for safe area */}
                 </div>
             </div>
         </div>
