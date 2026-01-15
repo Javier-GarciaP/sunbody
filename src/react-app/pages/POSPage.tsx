@@ -360,7 +360,7 @@ export default function POSPage() {
             {/* Mobile Bottom Bar & Sheet */}
             <div className="md:hidden">
                 {/* Floating Action Button / Summary Bar - Fixed Position above BottomNav */}
-                <div className="fixed bottom-[60px] left-0 right-0 p-3 bg-white dark:bg-[#1a1c2c] border-t border-slate-200 dark:border-slate-800 flex items-center gap-3 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                <div className="fixed bottom-[60px] left-0 right-0 p-3 bg-white dark:bg-[#1a1c2c] border-t border-slate-200 dark:border-slate-800 flex items-center gap-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                     <button
                         onClick={() => setIsCartOpen(true)}
                         className="flex-1 h-12 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-95 transition-all"
@@ -389,13 +389,13 @@ export default function POSPage() {
                 {/* Mobile Bottom Sheet Backdrop */}
                 {isCartOpen && (
                     <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] transition-opacity duration-300"
                         onClick={() => setIsCartOpen(false)}
                     />
                 )}
 
                 {/* Mobile Bottom Sheet Content */}
-                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[70] transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} h-[85dvh] flex flex-col shadow-2xl-top`}>
+                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[9999] transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} h-[85dvh] flex flex-col shadow-2xl-top`}>
                     <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-4 shrink-0" />
 
                     <div className="px-6 pb-2 flex justify-between items-center shrink-0">

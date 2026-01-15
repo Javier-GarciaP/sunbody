@@ -6,6 +6,30 @@
 
 :root {
   font-family: 'Inter', sans-serif;
+  
+  /* Mobile Design Tokens - Compact Spacing */
+  --space-mobile-xs: 0.25rem;  /* 4px */
+  --space-mobile-sm: 0.5rem;   /* 8px */
+  --space-mobile-md: 0.75rem;  /* 12px */
+  --space-mobile-lg: 1rem;     /* 16px */
+  --space-mobile-xl: 1.25rem;  /* 20px */
+  --space-mobile-2xl: 1.5rem;  /* 24px */
+  
+  /* Typography Scale - Mobile Optimized */
+  --text-mobile-xs: 0.6875rem; /* 11px */
+  --text-mobile-sm: 0.8125rem; /* 13px */
+  --text-mobile-base: 0.9375rem; /* 15px */
+  --text-mobile-lg: 1.0625rem; /* 17px */
+  --text-mobile-xl: 1.25rem;   /* 20px */
+  
+  /* Touch Targets */
+  --touch-target-min: 44px;
+  
+  /* Glassmorphism Effects */
+  --glass-bg-light: rgba(255, 255, 255, 0.8);
+  --glass-bg-dark: rgba(17, 24, 39, 0.8);
+  --glass-border-light: rgba(229, 231, 235, 0.5);
+  --glass-border-dark: rgba(55, 65, 81, 0.5);
 }
 
 html {
@@ -47,14 +71,25 @@ html {
 }
 
 @layer utilities {
+  /* Animations */
   .animate-fade-in-up {
     animation: fadeInUp 0.5s ease-out forwards;
   }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
 
+  /* Safe Areas */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Dynamic Viewport Height */
   .h-dvh {
     height: 100dvh;
   }
@@ -75,6 +110,26 @@ html {
     scrollbar-width: none;
     /* Firefox */
   }
+  
+  /* Glassmorphism Utility */
+  .glass-bg {
+    @apply backdrop-blur-xl bg-white/80 dark:bg-gray-950/80 border border-gray-200/50 dark:border-gray-800/50;
+  }
+  
+  /* Mobile Optimized Shadows */
+  .shadow-mobile {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-mobile-lg {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Touch-friendly sizes */
+  .touch-target {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
 }
 
 @layer base {
@@ -89,13 +144,51 @@ html {
       /* Prevents zoom */
       max-height: 100%;
     }
+    
+    /* Mobile Typography Optimization */
+    h1 {
+      font-size: 1.5rem; /* 24px */
+    }
+    
+    h2 {
+      font-size: 1.25rem; /* 20px */
+    }
+    
+    h3 {
+      font-size: 1.125rem; /* 18px */
+    }
   }
 }
 
+/* Keyframe Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
   }
 
   to {

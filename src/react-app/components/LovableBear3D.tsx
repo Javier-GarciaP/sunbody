@@ -204,7 +204,7 @@ export default function LovableBear3D() {
         const heart = confetti.shapeFromText({ text: '❤️', scalar });
 
         confetti({
-            particleCount: 35,
+            particleCount: 10,
             scalar: 2.5,
             shapes: [heart],
             spread: 80,

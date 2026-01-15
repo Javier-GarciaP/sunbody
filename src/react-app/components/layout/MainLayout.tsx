@@ -121,35 +121,39 @@ export default function MainLayout() {
                     </div>
                 </header>
 
-                {/* Mobile Header (Simplified) */}
-                <header className="md:hidden h-14 shrink-0 bg-white dark:bg-gray-950 flex items-center px-4 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 shadow-sm">
-                    <span className="font-bold text-gray-900 dark:text-white text-lg tracking-tight">Sumbody</span>
+                {/* Mobile Header (Simplified & Compact) */}
+                <header className="md:hidden h-12 shrink-0 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md flex items-center px-4 justify-between border-b border-gray-100/50 dark:border-gray-800/50 sticky top-0 z-40">
                     <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
+                            <span className="text-sm">S</span>
+                        </div>
+                        <span className="font-bold text-gray-900 dark:text-white text-base tracking-tight">Sunbody</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
                         >
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
-                        <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-brand-700 dark:text-brand-300 text-sm font-bold border border-brand-200 dark:border-brand-800 ring-2 ring-transparent ring-offset-2 dark:ring-offset-gray-900">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-brand-800 flex items-center justify-center text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-300/50 dark:border-brand-700/50">
                             {user?.displayName?.substring(0, 1).toUpperCase() || 'A'}
                         </div>
                     </div>
                 </header>
 
 
-                {/* Page Content - with pb safe for mobile nav */}
-                {/* For POS page, we want NO padding and NO scroll on main, so POSPage deals with it */}
-                <main className={`flex-1 flex flex-col min-w-0 min-h-0 relative ${location.pathname === '/pos'
-                    ? 'overflow-hidden p-0 h-full pt-14 md:pt-0'
-                    : 'overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overscroll-contain p-4 md:p-8 pt-14 md:pt-8 pb-[100px] md:pb-8'
+                {/* Page Content - No bottom padding on mobile since nav is now static */}
+                <main className={`flex-1 flex flex-col min-w-0 min-h-0 ${location.pathname === '/pos'
+                    ? 'overflow-hidden p-0'
+                    : 'overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overscroll-contain p-3 md:p-8 pb-4 md:pb-8'
                     }`}>
                     <div className={`flex flex-col min-h-0 mx-auto w-full ${location.pathname === '/pos' ? 'max-w-none h-full flex-1' : 'max-w-7xl h-auto flex-1'}`}>
                         <Outlet />
                     </div>
                 </main>
 
-                {/* Mobile Bottom Navigation */}
+                {/* Mobile Bottom Navigation - Now static, part of the flow */}
                 <BottomNav />
             </div>
         </div>
