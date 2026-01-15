@@ -4,13 +4,15 @@ import {
     ShoppingCart,
     Package,
     Users,
+    ArrowRightLeft,
 } from 'lucide-react';
 
 export default function BottomNav() {
     const navItems = [
         { icon: LayoutDashboard, label: 'Inicio', path: '/' },
         { icon: ShoppingCart, label: 'Venta', path: '/pos' },
-        { icon: Package, label: 'Inventario', path: '/inventory' },
+        { icon: ArrowRightLeft, label: 'Historial', path: '/transactions' },
+        { icon: Package, label: 'Stock', path: '/inventory' },
         { icon: Users, label: 'Clientes', path: '/customers' },
     ];
 

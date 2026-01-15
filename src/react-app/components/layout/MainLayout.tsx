@@ -129,14 +129,21 @@ export default function MainLayout() {
                         </div>
                         <span className="font-bold text-gray-900 dark:text-white text-base tracking-tight">Sunbody</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                         <button
                             onClick={toggleTheme}
-                            className="p-1.5 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700 transition-colors"
+                            className="p-1.5 text-gray-600 dark:text-gray-300 rounded-lg transition-colors"
                         >
                             {isDark ? <Sun size={18} /> : <Moon size={18} />}
                         </button>
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-brand-800 flex items-center justify-center text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-300/50 dark:border-brand-700/50">
+                        <button
+                            onClick={() => logout()}
+                            className="p-1.5 text-gray-400 hover:text-danger-500 transition-colors"
+                            title="Cerrar Sesión"
+                        >
+                            <LogOut size={18} />
+                        </button>
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900 dark:to-brand-800 flex items-center justify-center text-brand-700 dark:text-brand-300 text-[10px] font-black border border-brand-300/50 dark:border-brand-700/50 ml-0.5">
                             {user?.displayName?.substring(0, 1).toUpperCase() || 'A'}
                         </div>
                     </div>
