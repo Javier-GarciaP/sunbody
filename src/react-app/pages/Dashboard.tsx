@@ -5,7 +5,7 @@ import { useProducts } from '@/react-app/hooks/useProducts';
 import { useCustomers } from '@/react-app/hooks/useCustomers';
 import { useMemo } from 'react';
 import { parseServerDate } from '@/react-app/utils/date';
-import LovableBear from '@/react-app/components/LovableBear';
+import LovableBear3D from '@/react-app/components/LovableBear3D';
 
 export default function Dashboard() {
     const { sales, loading: loadingSales } = useSales();
@@ -80,8 +80,8 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Lovable Bear Animation */}
-            <LovableBear />
+            {/* Lovable Bear Animation (3D) */}
+            <LovableBear3D />
 
             {/* Top Stats Grid */}
             <div className="grid lg:grid-cols-12 gap-6">
