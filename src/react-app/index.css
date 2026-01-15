@@ -40,6 +40,19 @@ html {
   .animate-fade-in-up {
     animation: fadeInUp 0.5s ease-out forwards;
   }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer base {
+  /* Prevent iOS Zoom on inputs */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @keyframes fadeInUp {

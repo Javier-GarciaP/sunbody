@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/react-app/context/ThemeContext';
 import { useAuth } from '@/react-app/context/AuthContext';
+import BottomNav from './BottomNav';
 
 export default function MainLayout() {
     const location = useLocation();
@@ -98,7 +99,7 @@ export default function MainLayout() {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 bg-gray-50 dark:bg-gray-900">
                 {/* Desktop Header / Top Bar */}
-                <header className="h-16 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-sm md:flex hidden">
+                <header className="h-16 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-sm md:flex hidden">
                     <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm">
                         <LayoutDashboard size={16} />
                         <span>/</span>
@@ -138,35 +139,14 @@ export default function MainLayout() {
 
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 p-4 md:p-8 pb-24 md:pb-8">
+                <main className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 p-4 md:p-8 pb-32 md:pb-8">
                     <div className="max-w-7xl mx-auto h-full">
                         <Outlet />
                     </div>
                 </main>
 
                 {/* Mobile Bottom Navigation */}
-                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 pb-safe z-50 px-2 py-2 flex justify-around items-center">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `
-                                flex flex-col items-center justify-center w-full py-1 rounded-lg transition-colors
-                                ${isActive
-                                    ? 'text-brand-600 dark:text-brand-400'
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                }
-                            `}
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                                    <span className="text-[10px] font-medium mt-1 truncate max-w-[60px]">{item.label}</span>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
-                </nav>
+                <BottomNav />
             </div>
         </div>
     );

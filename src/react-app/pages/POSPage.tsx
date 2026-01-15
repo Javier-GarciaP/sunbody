@@ -278,7 +278,7 @@ export default function POSPage() {
                                                     key={variant.id}
                                                     onClick={() => addToCart(product, variant)}
                                                     disabled={variant.stock <= 0}
-                                                    className={`w-6 h-6 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center transition-transform hover:scale-125 hover:z-10 ${variant.stock <= 0 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    className={`w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center transition-transform hover:scale-110 active:scale-95 hover:z-10 ${variant.stock <= 0 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
                                                     style={{ backgroundColor: variant.color_hex }}
                                                     title={`${variant.color_name} (${variant.stock})`}
                                                 >
@@ -357,29 +357,30 @@ export default function POSPage() {
 
             {/* Mobile Bottom Bar & Sheet */}
             <div className="md:hidden">
-                {/* Floating Action Button / Summary Bar */}
-                <div className="p-4 bg-white dark:bg-[#1a1c2c] border-t border-slate-200 dark:border-slate-800 flex items-center gap-4 safe-bottom">
+                {/* Floating Action Button / Summary Bar - Fixed Position above BottomNav */}
+                <div className="fixed bottom-[60px] left-0 right-0 p-3 bg-white dark:bg-[#1a1c2c] border-t border-slate-200 dark:border-slate-800 flex items-center gap-3 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                     <button
                         onClick={() => setIsCartOpen(true)}
-                        className="flex-1 h-14 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-lg shadow-brand-500/25 active:scale-95 transition-all"
+                        className="flex-1 h-12 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-95 transition-all"
                     >
                         <div className="relative">
-                            <ShoppingCart size={24} />
+                            <ShoppingCart size={20} />
                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-brand-500">
+                                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border border-brand-500">
                                     {cartCount}
                                 </span>
                             )}
                         </div>
-                        Pagar Ticket
-                        <span className="opacity-60 ml-1">·</span>
-                        <span className="text-xl">${total.toLocaleString()}</span>
+                        <span>Pagar</span>
+                        <span className="opacity-60 mx-0.5">·</span>
+                        <span className="text-lg">${(total / 1000).toLocaleString()}k</span>
                     </button>
                     <button
                         onClick={() => setCart([])}
-                        className="w-14 h-14 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-2xl flex items-center justify-center active:scale-95 transition-all"
+                        disabled={cart.length === 0}
+                        className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl flex items-center justify-center active:scale-95 transition-all disabled:opacity-50"
                     >
-                        <Trash2 size={24} />
+                        <Trash2 size={20} />
                     </button>
                 </div>
 
