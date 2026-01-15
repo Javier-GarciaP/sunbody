@@ -122,7 +122,7 @@ export default function MainLayout() {
                 </header>
 
                 {/* Mobile Header (Simplified) */}
-                <header className="md:hidden h-14 shrink-0 bg-white dark:bg-gray-950 flex items-center px-4 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 z-20 shadow-sm">
+                <header className="md:hidden h-14 shrink-0 bg-white dark:bg-gray-950 flex items-center px-4 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 z-40 shadow-sm">
                     <span className="font-bold text-gray-900 dark:text-white text-lg tracking-tight">Sumbody</span>
                     <div className="flex items-center gap-2">
                         <button
@@ -141,8 +141,8 @@ export default function MainLayout() {
                 {/* Page Content - with pb safe for mobile nav */}
                 {/* For POS page, we want NO padding and NO scroll on main, so POSPage deals with it */}
                 <main className={`flex-1 flex flex-col min-w-0 min-h-0 relative ${location.pathname === '/pos'
-                    ? 'overflow-hidden p-0 h-full'
-                    : 'overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overscroll-contain p-4 md:p-8 pb-[100px] md:pb-8'
+                    ? 'overflow-hidden p-0 h-full pt-14 md:pt-0'
+                    : 'overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overscroll-contain p-4 md:p-8 pt-14 md:pt-8 pb-[100px] md:pb-8'
                     }`}>
                     <div className={`flex flex-col min-h-0 mx-auto w-full ${location.pathname === '/pos' ? 'max-w-none h-full flex-1' : 'max-w-7xl h-auto flex-1'}`}>
                         <Outlet />

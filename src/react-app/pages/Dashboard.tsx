@@ -63,7 +63,7 @@ export default function Dashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-1">
-                        Dashboard 🎅
+                        Dashboard 🎆
                     </h1>
                     <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium">
                         Resumen de actividad y estado del sistema
