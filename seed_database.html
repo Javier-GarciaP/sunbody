@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumbody - Inicializar Base de Datos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+        .warning strong {
+            color: #856404;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #initBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #initBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        #initBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #clearBtn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        #clearBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        #log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .log-success {
+            color: #4ec9b0;
+        }
+
+        .log-error {
+            color: #f48771;
+        }
+
+        .log-info {
+            color: #569cd6;
+        }
+
+        .log-warning {
+            color: #dcdcaa;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Sumbody Database</h1>
+        <p class="subtitle">Inicialización de Base de Datos</p>
+
+        <div class="warning">
+            <strong>⚠️ ADVERTENCIA:</strong> Este script eliminará TODOS los datos existentes en la base de datos y creará nuevos registros de prueba.
+        </div>
+
+        <div class="button-group">
+            <button id="initBtn" onclick="initializeDatabase()">
+                🚀 Inicializar Base de Datos
+            </button>
+            <button id="clearBtn" onclick="clearDatabase()">
+                🗑️ Solo Limpiar Base de Datos
+            </button>
+        </div>
+
+        <div id="log"></div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="colorCount">0</div>
+                <div class="stat-label">Colores</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="productCount">0</div>
+                <div class="stat-label">Productos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="packageCount">0</div>
+                <div class="stat-label">Paquetes</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = `log-${type}`;
+            logDiv.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function clearDatabase() {
+            const confirmed = confirm('¿Estás seguro de que deseas eliminar TODOS los datos de la base de datos?');
+            if (!confirmed) return;
+
+            document.getElementById('initBtn').disabled = true;
+            document.getElementById('clearBtn').disabled = true;
+            document.getElementById('log').innerHTML = '';
+            
+            log('🗑️ Iniciando limpieza de base de datos...', 'warning');
+
+            try {
+                // Clear in reverse order of dependencies
+                const tables = [
+                    'sale_items',
+                    'sales',
+                    'payments',
+                    'package_items',
+                    'packages',
+                    'product_variants',
+                    'products_base',
+                    'products',
+                    'customers',
+                    'colors'
+                ];
+
+                for (const table of tables) {
+                    try {
+                        const response = await fetch(`${API_BASE}/clear/${table}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            log(`✓ Tabla ${table} limpiada`, 'success');
+                        } else {
+                            log(`⚠ No se pudo limpiar ${table} (puede no existir endpoint)`, 'warning');
+                        }
+                    } catch (error) {
+                        log(`⚠ Error limpiando ${table}: ${error.message}`, 'warning');
+                    }
+                }
+
+                log('✅ Base de datos limpiada exitosamente', 'success');
+            } catch (error) {
+                log(`❌ Error durante la limpieza: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('initBtn').disabled = false;
+                document.getElementById('clearBtn').disabled = false;
+            }
+        }
+
+        async function initializeDatabase() {
+            const confirmed = confirm('¿Estás seguro de que deseas inicializar la base de datos? Esto eliminará todos los datos existentes.');
+            if (!confirmed) return;
+
+            document.getElementById('initBtn').disabled = true;
+            document.getElementById('clearBtn').disabled = true;
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('stats').style.display = 'none';
+            
+            log('🚀 Iniciando proceso de inicialización...', 'info');
+
+            try {
+                // Step 1: Clear database
+                await clearDatabase();
+
+                // Step 2: Create colors
+                log('\n🎨 Creando colores...', 'info');
+                const colors = await createColors();
+                log(`✅ ${colors.length} colores creados`, 'success');
+
+                // Step 3: Create products
+                log('\n👕 Creando productos base...', 'info');
+                const products = await createProducts(colors);
+                log(`✅ ${products.length} productos creados`, 'success');
+
+                // Step 4: Create packages
+                log('\n📦 Creando paquetes...', 'info');
+                const packages = await createPackages(products, colors);
+                log(`✅ ${packages.length} paquetes creados`, 'success');
+
+                // Show stats
+                document.getElementById('colorCount').textContent = colors.length;
+                document.getElementById('productCount').textContent = products.length;
+                document.getElementById('packageCount').textContent = packages.length;
+                document.getElementById('stats').style.display = 'grid';
+
+                log('\n🎉 ¡Base de datos inicializada exitosamente!', 'success');
+            } catch (error) {
+                log(`\n❌ Error fatal: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                document.getElementById('initBtn').disabled = false;
+                document.getElementById('clearBtn').disabled = false;
+            }
+        }
+
+        async function createColors() {
+            const colorData = [
+                // Colores básicos
+                { name: 'Negro', hex_code: '#000000' },
+                { name: 'Blanco', hex_code: '#FFFFFF' },
+                { name: 'Gris', hex_code: '#808080' },
+                { name: 'Rojo', hex_code: '#FF0000' },
+                { name: 'Azul', hex_code: '#0000FF' },
+                { name: 'Verde', hex_code: '#008000' },
+                { name: 'Amarillo', hex_code: '#FFFF00' },
+                { name: 'Naranja', hex_code: '#FFA500' },
+                { name: 'Rosa', hex_code: '#FFC0CB' },
+                { name: 'Morado', hex_code: '#800080' },
+                { name: 'Beige', hex_code: '#F5F5DC' },
+                { name: 'Turquesa', hex_code: '#40E0D0' },
+                { name: 'Verde Oliva', hex_code: '#808000' },
+                { name: 'Azul Marino', hex_code: '#000080' },
+                { name: 'Fucsia', hex_code: '#FF00FF' },
+                { name: 'Verde Menta', hex_code: '#98FF98' },
+                { name: 'Coral', hex_code: '#FF7F50' },
+                { name: 'Lavanda', hex_code: '#E6E6FA' },
+                { name: 'Durazno', hex_code: '#FFDAB9' },
+                { name: 'Celeste', hex_code: '#87CEEB' },
+                
+                // 3 Tonalidades de marrón
+                { name: 'Marrón Claro', hex_code: '#D2B48C' },
+                { name: 'Marrón', hex_code: '#8B4513' },
+                { name: 'Marrón Oscuro', hex_code: '#654321' }
+            ];
+
+            const createdColors = [];
+            
+            for (const color of colorData) {
+                try {
+                    const response = await fetch(`${API_BASE}/colors`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(color)
+                    });
+
+                    if (response.ok) {
+                        const created = await response.json();
+                        createdColors.push(created);
+                        log(`  ✓ Color creado: ${color.name}`, 'success');
+                    } else {
+                        log(`  ✗ Error creando color: ${color.name}`, 'error');
+                    }
+                } catch (error) {
+                    log(`  ✗ Error: ${error.message}`, 'error');
+                }
+            }
+
+            return createdColors;
+        }
+
+        async function createProducts(colors) {
+            const productData = [
+                { name: 'Mono Baggy', price_cop: 38000 },
+                { name: 'Body manga larga (Cuello cuadrado)', price_cop: 38000 },
+                { name: 'Body manga larga (Cuello redondo)', price_cop: 38000 },
+                { name: 'Body manga corta (Cuello cuadrado)', price_cop: 36000 },
+                { name: 'Body manga corta (Cuello redondo)', price_cop: 36000 },
+                { name: 'Body Halter', price_cop: 34000 },
+                { name: 'Body corte princesa', price_cop: 34000 },
+                { name: 'Body Asimétrico', price_cop: 32000 }
+            ];
+
+            const createdProducts = [];
+
+            for (const product of productData) {
+                try {
+                    const response = await fetch(`${API_BASE}/products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    });
+
+                    if (response.ok) {
+                        const created = await response.json();
+                        createdProducts.push(created);
+                        log(`  ✓ Producto creado: ${product.name} - $${product.price_cop.toLocaleString()}`, 'success');
+
+                        // Create variants for some popular colors
+                        const popularColors = colors.slice(0, 5); // First 5 colors
+                        for (const color of popularColors) {
+                            try {
+                                await fetch(`${API_BASE}/product-variants`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        product_id: created.id,
+                                        color_id: color.id,
+                                        stock: Math.floor(Math.random() * 10) + 5 // Random stock 5-14
+                                    })
+                                });
+                            } catch (error) {
+                                // Silently continue if variant creation fails
+                            }
+                        }
+                    } else {
+                        log(`  ✗ Error creando producto: ${product.name}`, 'error');
+                    }
+                } catch (error) {
+                    log(`  ✗ Error: ${error.message}`, 'error');
+                }
+            }
+
+            return createdProducts;
+        }
+
+        async function createPackages(products, colors) {
+            const packageData = [
+                {
+                    name: 'Paquete Básico',
+                    status: 'Armado',
+                    items: [
+                        { productIndex: 0, colorIndex: 0, quantity: 2 }, // Mono Baggy Negro x2
+                        { productIndex: 3, colorIndex: 1, quantity: 3 }, // Body manga corta Blanco x3
+                        { productIndex: 5, colorIndex: 4, quantity: 2 }  // Body Halter Azul x2
+                    ]
+                },
+                {
+                    name: 'Paquete Premium',
+                    status: 'Armado',
+                    items: [
+                        { productIndex: 1, colorIndex: 0, quantity: 3 }, // Body manga larga cuadrado Negro x3
+                        { productIndex: 2, colorIndex: 3, quantity: 3 }, // Body manga larga redondo Rojo x3
+                        { productIndex: 6, colorIndex: 8, quantity: 4 }  // Body corte princesa Rosa x4
+                    ]
+                },
+                {
+                    name: 'Paquete Variado',
+                    status: 'Armado',
+                    items: [
+                        { productIndex: 0, colorIndex: 2, quantity: 2 }, // Mono Baggy Gris x2
+                        { productIndex: 4, colorIndex: 1, quantity: 2 }, // Body manga corta redondo Blanco x2
+                        { productIndex: 7, colorIndex: 9, quantity: 3 }, // Body Asimétrico Morado x3
+                        { productIndex: 5, colorIndex: 0, quantity: 2 }  // Body Halter Negro x2
+                    ]
+                },
+                {
+                    name: 'Paquete Especial',
+                    status: 'Armado',
+                    items: [
+                        { productIndex: 1, colorIndex: 20, quantity: 2 }, // Body manga larga Marrón Claro x2
+                        { productIndex: 3, colorIndex: 21, quantity: 3 }, // Body manga corta Marrón x3
+                        { productIndex: 6, colorIndex: 22, quantity: 2 }, // Body corte princesa Marrón Oscuro x2
+                        { productIndex: 0, colorIndex: 4, quantity: 2 }   // Mono Baggy Azul x2
+                    ]
+                }
+            ];
+
+            const createdPackages = [];
+
+            for (const pkg of packageData) {
+                try {
+                    // Create package
+                    const response = await fetch(`${API_BASE}/packages`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: pkg.name,
+                            status: pkg.status
+                        })
+                    });
+
+                    if (response.ok) {
+                        const createdPkg = await response.json();
+                        createdPackages.push(createdPkg);
+                        log(`  ✓ Paquete creado: ${pkg.name}`, 'success');
+
+                        // Add items to package
+                        for (const item of pkg.items) {
+                            const product = products[item.productIndex];
+                            const color = colors[item.colorIndex];
+
+                            if (product && color) {
+                                try {
+                                    await fetch(`${API_BASE}/package-items`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            package_id: createdPkg.id,
+                                            product_id: product.id,
+                                            color_id: color.id,
+                                            quantity: item.quantity
+                                        })
+                                    });
+                                    log(`    → ${item.quantity}x ${product.name} (${color.name})`, 'info');
+                                } catch (error) {
+                                    log(`    ✗ Error agregando item al paquete`, 'error');
+                                }
+                            }
+                        }
+                    } else {
+                        log(`  ✗ Error creando paquete: ${pkg.name}`, 'error');
+                    }
+                } catch (error) {
+                    log(`  ✗ Error: ${error.message}`, 'error');
+                }
+            }
+
+            return createdPackages;
+        }
+    </script>
+</body>
+</html>
