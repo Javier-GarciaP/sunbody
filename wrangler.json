@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "019bb3a9-4d87-7475-9d17-6f9c280e4054",
+	"name": "sunbody",
 	"main": "./src/worker/index.ts",
 	"compatibility_date": "2025-06-17",
 	"compatibility_flags": [
