@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSales } from '@/react-app/hooks/useSales';
 import { usePayments } from '@/react-app/hooks/usePayments';
 import { useExchangeRate, convertVesToCop } from '@/react-app/hooks/useExchangeRate';
-import { DollarSign, ArrowUpRight, ArrowDownLeft, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { parseServerDate } from '@/react-app/utils/date';
 
 type TimeRange = 'Diario' | 'Semanal' | 'Mensual';
@@ -126,20 +126,20 @@ export default function TransactionsPage() {
     if (loadingSales || loadingPayments) return <div className="p-10 text-center font-bold text-slate-400">Cargando transacciones...</div>;
 
     return (
-        <div className="space-y-6 animate-fade-in pb-10">
+        <div className="p-2 md:p-6 space-y-3 md:space-y-6 animate-fade-in pb-10">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Transacciones</h1>
-                    <p className="text-slate-500 font-medium">Control de flujo de caja y ventas</p>
+                    <h1 className="text-lg md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Transacciones</h1>
+                    <p className="text-[10px] md:text-sm text-slate-500 font-medium">Movimientos y ventas</p>
                 </div>
 
-                <div className="flex items-center bg-white dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center bg-white dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     {(['Diario', 'Semanal', 'Mensual'] as TimeRange[]).map(range => (
                         <button
                             key={range}
                             onClick={() => setTimeRange(range)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${timeRange === range
+                            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-sm font-black transition-all ${timeRange === range
                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
                                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700'
                                 }`}
@@ -151,43 +151,34 @@ export default function TransactionsPage() {
             </div>
 
             {/* Date Navigation & Stats */}
-            <div className="grid lg:grid-cols-4 gap-6">
+            <div className="grid lg:grid-cols-4 gap-3 md:gap-6">
                 {/* Navigation Card */}
-                <div className="lg:col-span-1 bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center items-center text-center">
-                    <div className="flex items-center justify-between w-full mb-2">
-                        <button onClick={() => handleDateChange(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-400 font-bold">←</button>
-                        <span className="text-brand-500 font-black text-sm uppercase tracking-widest">{timeRange}</span>
-                        <button onClick={() => handleDateChange(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-400 font-bold">→</button>
+                <div className="lg:col-span-1 bg-white dark:bg-slate-800 rounded-2xl p-3 md:p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center items-center text-center">
+                    <div className="flex items-center justify-between w-full mb-1">
+                        <button onClick={() => handleDateChange(-1)} className="p-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 font-bold">←</button>
+                        <span className="text-brand-500 font-black text-[9px] md:text-sm uppercase tracking-widest">{timeRange}</span>
+                        <button onClick={() => handleDateChange(1)} className="p-1 px-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 font-bold">→</button>
                     </div>
-                    <div className="text-xl font-bold text-slate-800 dark:text-slate-200 capitalize">
+                    <div className="text-sm md:text-xl font-bold text-slate-800 dark:text-slate-200 capitalize">
                         {formatDateDisplay()}
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="lg:col-span-3 grid sm:grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-3xl p-5 text-white shadow-xl shadow-brand-500/20 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                            <DollarSign size={60} />
-                        </div>
-                        <div className="text-brand-100 text-xs font-bold uppercase tracking-wider mb-1">Ingresos Reales (Caja)</div>
-                        <div className="text-3xl font-black tracking-tight">${stats.cashFlow.toLocaleString()}</div>
+                <div className="lg:col-span-3 grid grid-cols-3 gap-2 md:gap-4">
+                    <div className="bg-gradient-to-br from-brand-500 to-brand-600 rounded-2xl p-3 md:p-5 text-white shadow-xl shadow-brand-500/20 relative overflow-hidden group">
+                        <div className="text-brand-100 text-[8px] md:text-xs font-bold uppercase tracking-wider mb-0.5">Caja</div>
+                        <div className="text-sm md:text-3xl font-black tracking-tight">${stats.cashFlow.toLocaleString()}</div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 text-emerald-500 opacity-5 group-hover:scale-110 transition-transform">
-                            <ArrowUpRight size={60} />
-                        </div>
-                        <div className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Ventas Totales</div>
-                        <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">${stats.totalSales.toLocaleString()}</div>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                        <div className="text-slate-400 text-[8px] md:text-xs font-bold uppercase tracking-wider mb-0.5">Ventas</div>
+                        <div className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">${stats.totalSales.toLocaleString()}</div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 text-amber-500 opacity-5 group-hover:scale-110 transition-transform">
-                            <ArrowDownLeft size={60} />
-                        </div>
-                        <div className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Cuentas por Cobrar (Generado)</div>
-                        <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">${stats.receivables.toLocaleString()}</div>
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-3 md:p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                        <div className="text-slate-400 text-[8px] md:text-xs font-bold uppercase tracking-wider mb-0.5">Cuentas</div>
+                        <div className="text-sm md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">${stats.receivables.toLocaleString()}</div>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, User, X, Zap, Grid, List, Check } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, User, X, Zap, Check } from 'lucide-react';
 import { useState, useMemo, useRef } from 'react';
 import { useProducts } from '@/react-app/hooks/useProducts';
 import { useCustomers } from '@/react-app/hooks/useCustomers';
@@ -26,7 +26,7 @@ export default function POSPage() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Todos');
-    const [viewMode, setViewMode] = useState<ViewMode>('grid');
+    const [viewMode] = useState<ViewMode>('grid');
     const [cart, setCart] = useState<CartItem[]>([]);
 
     // Customer Selection State
@@ -190,53 +190,36 @@ export default function POSPage() {
 
                     {/* Header: Search & Categories */}
                     <div className="p-2 md:p-4 bg-white dark:bg-[#1a1c2c] border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 space-y-2 md:space-y-4">
-                        <div className="flex gap-2 md:gap-3">
-                            <div className="relative flex-1 group">
-                                <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={18} />
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar..."
+                                    placeholder="Buscar productos..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 bg-slate-100 dark:bg-slate-900 border-none rounded-xl md:rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-bold transition-all text-sm md:text-base"
+                                    className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-bold transition-all text-xs md:text-sm"
                                 />
-                            </div>
-
-                            {/* View Mode Toggle - Only on desktop or slightly larger than tiny mobile */}
-                            <div className="hidden sm:flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                >
-                                    <Grid size={18} />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                >
-                                    <List size={18} />
-                                </button>
                             </div>
 
                             <button
                                 onClick={handleQuickSale}
-                                className="px-3 bg-brand-500/10 text-brand-500 rounded-xl font-bold flex items-center gap-1.5 hover:bg-brand-500 hover:text-white transition-all active:scale-95"
-                                title="Venta Rápida"
+                                className="px-3 py-2 bg-brand-500/10 text-brand-500 rounded-xl font-black flex items-center gap-1.5 transition-all active:scale-95 text-[10px] md:text-sm"
                             >
-                                <Zap size={18} fill="currentColor" />
-                                <span className="hidden sm:inline">Rápida</span>
+                                <Zap size={14} fill="currentColor" />
+                                <span className="hidden xs:inline">Rápida</span>
                             </button>
                         </div>
 
                         {/* Category Tabs */}
-                        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 snap-x">
+                        <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar snap-x">
                             {categories.map(cat => (
                                 <button
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${selectedCategory === cat
+                                    className={`px-3 py-1 rounded-lg text-[10px] md:text-xs font-black whitespace-nowrap transition-all ${selectedCategory === cat
                                         ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                         }`}
                                 >
                                     {cat}

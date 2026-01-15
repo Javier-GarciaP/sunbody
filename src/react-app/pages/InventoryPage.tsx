@@ -8,62 +8,62 @@ export default function InventoryPage() {
     const [activeTab, setActiveTab] = useState<'products' | 'colors' | 'packages'>('products');
 
     return (
-        <div className="p-4 space-y-6 animate-fade-in">
+        <div className="p-2 md:p-6 space-y-2 md:space-y-6 animate-fade-in">
             <div className="flex flex-col gap-2">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+                    <h1 className="text-lg md:text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-0.5 md:mb-2">
                         Inventario
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">
-                        Gestión centralizada de existencias
+                    <p className="text-[10px] md:text-base text-gray-500 dark:text-gray-400 font-medium">
+                        Modelos y existencias
                     </p>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 p-1 bg-gray-200/50 dark:bg-gray-900/50 rounded-lg w-fit border border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-3 md:flex items-center gap-1 p-0.5 bg-gray-200/50 dark:bg-gray-900/50 rounded-lg md:w-fit border border-gray-200 dark:border-gray-700">
                     <button
                         onClick={() => setActiveTab('products')}
                         className={`
-                            flex w-full items-center gap-1 px-2 py-2 rounded-md text-sm font-bold transition-all
+                            flex items-center justify-center gap-1 px-2 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-sm font-black transition-all
                             ${activeTab === 'products'
                                 ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-white shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-800'
                             }
                         `}
                     >
-                        <Box size={18} />
-                        Productos
+                        <Box size={14} />
+                        <span>Items</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('colors')}
                         className={`
-                            flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all
+                            flex items-center justify-center gap-1 px-2 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-sm font-black transition-all
                             ${activeTab === 'colors'
                                 ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-white shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-800'
                             }
                         `}
                     >
-                        <Palette size={18} />
-                        Colores
+                        <Palette size={14} />
+                        <span>Color</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('packages')}
                         className={`
-                            flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all
+                            flex items-center justify-center gap-1 px-2 md:px-4 py-1.5 md:py-2 rounded-md text-[10px] md:text-sm font-black transition-all
                             ${activeTab === 'packages'
                                 ? 'bg-white dark:bg-gray-700 text-brand-600 dark:text-white shadow-sm'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-800'
                             }
                         `}
                     >
-                        <Package size={18} />
-                        Paquetes
+                        <Package size={14} />
+                        <span>Packs</span>
                     </button>
                 </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-2 md:mt-6">
                 {activeTab === 'products' && <ProductManager />}
                 {activeTab === 'colors' && <ColorManager />}
                 {activeTab === 'packages' && <PackageManager />}

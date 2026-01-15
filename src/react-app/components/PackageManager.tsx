@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Check, X, Package as PackageIcon, Pencil, Info, Copy } from 'lucide-react';
+import { Plus, Trash2, Check, Package as PackageIcon, Pencil, Copy } from 'lucide-react';
 import { usePackages } from '@/react-app/hooks/usePackages';
 import { useProducts } from '@/react-app/hooks/useProducts';
 
@@ -93,11 +93,11 @@ export default function PackageManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+      <div className="flex items-center justify-between">
+        <div className="hidden md:block">
           <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
             <PackageIcon className="w-8 h-8 text-brand-500" />
             Gestión de Paquetes
@@ -110,9 +110,9 @@ export default function PackageManager() {
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 transform hover:scale-[1.02] transition-all duration-200 font-bold"
+            className="flex items-center gap-1.5 px-3 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/20 transition-all font-black text-xs md:text-sm"
           >
-            <Plus className="w-5 h-5" />
+            <Plus size={16} />
             <span>Nuevo Paquete</span>
           </button>
         )}
@@ -120,190 +120,186 @@ export default function PackageManager() {
 
       {/* Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 p-6 bg-white dark:bg-gray-700 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600 animate-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white">
-              {editingId ? 'Editar Paquete' : 'Crear Nuevo Paquete'}
+        <form onSubmit={handleSubmit} className="mb-4 md:mb-8 p-4 md:p-6 bg-white dark:bg-gray-700 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-600 animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h4 className="text-sm md:text-lg font-black text-gray-900 dark:text-white uppercase tracking-wider">
+              {editingId ? 'Editar Paquete' : 'Nuevo Paquete'}
             </h4>
-            <button type="button" onClick={resetForm} className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
-              <X className="w-5 h-5" />
+            <button type="button" onClick={resetForm} className="text-gray-400">
+              <Trash2 size={18} />
             </button>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nombre / Referencia</label>
+              <label className="block text-[10px] md:text-sm font-black text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Referencia</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all font-medium"
-                placeholder="Ej. Pedido #123 - Agosto"
+                className="w-full px-3 py-2 md:px-4 md:py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all text-sm font-bold"
+                placeholder="Nombre del paquete"
                 required
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Contenido del Paquete</label>
+                <label className="block text-[10px] md:text-sm font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contenido</label>
                 <button
                   type="button"
                   onClick={addItem}
-                  className="text-sm font-bold text-brand-500 hover:text-brand-600 dark:hover:text-brand-400 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                  className="text-[10px] md:text-sm font-black text-brand-500 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-brand-50 transition-colors uppercase"
                 >
-                  <Plus className="w-4 h-4" />
-                  Agregar Item
+                  <Plus size={14} />
+                  Añadir
                 </button>
               </div>
 
               {formData.items.length === 0 && (
-                <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-xl text-gray-400">
-                  <p className="text-sm">Agrega productos al paquete</p>
+                <div className="text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-xl text-gray-400">
+                  <p className="text-xs font-bold uppercase tracking-widest">Paquete vacío</p>
                 </div>
               )}
 
-              {formData.items.map((item, index) => (
-                <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-600 animate-in fade-in slide-in-from-left-2 items-start md:items-center">
-                  <div className="flex-1 w-full md:w-auto">
-                    <select
-                      value={item.product_id}
-                      onChange={(e) => updateItem(index, 'product_id', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm font-medium"
-                      required
-                    >
-                      <option value={0}>Seleccionar producto...</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>{product.name}</option>
-                      ))}
-                    </select>
-                  </div>
+              <div className="space-y-2">
+                {formData.items.map((item, index) => (
+                  <div key={index} className="flex flex-col md:flex-row gap-2 p-2 md:p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-600 items-start md:items-center">
+                    <div className="flex-1 w-full">
+                      <select
+                        value={item.product_id}
+                        onChange={(e) => updateItem(index, 'product_id', parseInt(e.target.value))}
+                        className="w-full px-2 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg outline-none text-[10px] md:text-sm font-bold"
+                        required
+                      >
+                        <option value={0}>Producto...</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>{product.name}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="flex-1 w-full md:w-auto">
-                    <select
-                      value={item.color_id}
-                      onChange={(e) => updateItem(index, 'color_id', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm font-medium disabled:opacity-50"
-                      required
-                      disabled={!item.product_id}
-                    >
-                      <option value={0}>Color</option>
-                      {getProductVariants(item.product_id).map((variant) => (
-                        <option key={variant.id} value={variant.color_id}>
-                          {variant.color_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <select
+                        value={item.color_id}
+                        onChange={(e) => updateItem(index, 'color_id', parseInt(e.target.value))}
+                        className="flex-1 md:w-32 px-2 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg outline-none text-[10px] md:text-sm font-bold disabled:opacity-50"
+                        required
+                        disabled={!item.product_id}
+                      >
+                        <option value={0}>Color</option>
+                        {getProductVariants(item.product_id).map((variant) => (
+                          <option key={variant.id} value={variant.color_id}>
+                            {variant.color_name}
+                          </option>
+                        ))}
+                      </select>
 
-                  <div className="w-24">
-                    <input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none text-sm font-medium text-center"
-                      min="1"
-                    />
-                  </div>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                        className="w-16 px-2 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg outline-none text-[10px] md:text-sm font-black text-center"
+                        min="1"
+                      />
 
-                  <button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-gray-600">
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
             <button
               type="button"
               onClick={resetForm}
-              className="px-6 py-2.5 font-bold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600 rounded-xl transition-colors"
+              className="px-4 py-2 font-black text-gray-500 text-xs md:text-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/20 font-bold transition-all transform active:scale-95"
+              className="flex items-center gap-1.5 px-6 py-2 bg-brand-500 text-white rounded-xl shadow-lg shadow-brand-500/20 font-black text-xs md:text-sm transition-all transform active:scale-95"
             >
-              <Check className="w-5 h-5" />
-              {editingId ? 'Guardar Cambios' : 'Crear Paquete'}
+              <Check size={16} />
+              {editingId ? 'Guardar' : 'Crear'}
             </button>
           </div>
         </form>
       )}
 
       {/* Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {packages.map((pkg) => (
-          <div key={pkg.id} className="group bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-xl hover:border-brand-500/30 transition-all duration-300 flex flex-col">
+          <div key={pkg.id} className="group bg-white dark:bg-gray-800 rounded-2xl p-3 md:p-5 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col relative">
 
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className={`p-2.5 rounded-xl ${statusColors[pkg.status as keyof typeof statusColors]} bg-opacity-20`}>
-                  <PackageIcon className="w-5 h-5" />
+            <div className="flex items-start justify-between mb-3 md:mb-4">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className={`p-1.5 md:p-2.5 rounded-lg md:rounded-xl ${statusColors[pkg.status as keyof typeof statusColors]} bg-opacity-20`}>
+                  <PackageIcon size={18} className="md:w-5 md:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate" title={pkg.name}>{pkg.name}</h4>
-                  <span className="text-xs text-gray-400 font-medium">
-                    {new Date(pkg.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <h4 className="text-sm md:text-lg font-black text-gray-900 dark:text-white truncate" title={pkg.name}>{pkg.name}</h4>
+                  <span className="text-[9px] md:text-xs text-gray-400 font-bold uppercase tracking-tighter">
+                    {new Date(pkg.created_at).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleCopy(pkg)}
-                  className={`p-2 rounded-lg transition-colors ${copiedId === pkg.id ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20'}`}
-                  title="Copiar pedido"
+                  className={`p-1.5 rounded-lg transition-colors ${copiedId === pkg.id ? 'text-emerald-500 bg-emerald-50' : 'text-gray-400 hover:text-brand-500'}`}
                 >
-                  {copiedId === pkg.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedId === pkg.id ? <Check size={14} /> : <Copy size={14} />}
                 </button>
                 <button
                   onClick={() => handleEdit(pkg)}
-                  className="p-2 text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors"
-                  title="Editar paquete"
+                  className="p-1.5 text-gray-400 hover:text-brand-500"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => deletePackage(pkg.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  title="Eliminar paquete"
+                  className="p-1.5 text-gray-400 hover:text-red-500"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 mb-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Contenido ({pkg.items.length})</p>
+            <div className="flex-1 mb-3 md:mb-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 md:p-3 space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
+              <p className="text-[8px] md:text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Contenido ({pkg.items.length})</p>
               {pkg.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-sm group/item">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div key={item.id} className="flex items-center justify-between text-[10px] md:text-sm group/item">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <div
-                      className="w-3 h-3 rounded-full ring-1 ring-black/5 dark:ring-white/10 flex-shrink-0"
+                      className="w-2 md:w-3 h-2 md:h-3 rounded-full ring-1 ring-black/5 flex-shrink-0"
                       style={{ backgroundColor: item.color_hex }}
-                      title={item.color_name}
                     />
-                    <span className="text-gray-600 dark:text-gray-300 truncate font-medium">{item.product_name}</span>
+                    <span className="text-gray-600 dark:text-gray-300 truncate font-black">{item.product_name}</span>
                   </div>
-                  <span className="font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-2 py-0.5 rounded-md text-xs shadow-sm border border-gray-100 dark:border-gray-700">
+                  <span className="font-black text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded-md text-[9px] md:text-xs shadow-sm border border-gray-100 dark:border-gray-700">
                     x{item.quantity}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="mt-auto pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="relative">
                 <select
                   value={pkg.status}
                   onChange={(e) => updatePackage(pkg.id, { status: e.target.value })}
-                  className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold border-2 cursor-pointer appearance-none transition-all outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-500 dark:focus:ring-offset-gray-800 ${pkg.status === 'Entregado'
+                  className={`w-full px-3 py-2 rounded-xl text-[10px] md:text-sm font-black border-2 cursor-pointer appearance-none transition-all outline-none ${pkg.status === 'Entregado'
                     ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
                     : pkg.status === 'Enviado'
                       ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
@@ -312,15 +308,12 @@ export default function PackageManager() {
                 >
                   <option value="Armado">📦 Armado</option>
                   <option value="Enviado">✈️ Enviado</option>
-                  <option value="Entregado">✅ Entregado (Inventario)</option>
+                  <option value="Entregado">✅ Entregado</option>
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Info className="w-4 h-4 opacity-50" />
-                </div>
               </div>
               {pkg.status === 'Entregado' && (
-                <p className="text-[10px] text-green-600 dark:text-green-400 text-center mt-2 font-medium bg-green-50 dark:bg-green-900/20 py-1 rounded-lg">
-                  Los productos han sido cargados al inventario
+                <p className="text-[8px] md:text-[10px] text-green-600 dark:text-green-400 text-center mt-1 font-black bg-green-50 dark:bg-green-900/20 py-0.5 rounded-lg uppercase tracking-wider">
+                  Inventario Cargado
                 </p>
               )}
             </div>
@@ -328,13 +321,13 @@ export default function PackageManager() {
         ))}
 
         {packages.length === 0 && !showForm && (
-          <div className="col-span-full py-20 bg-gray-50/50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-              <PackageIcon className="w-8 h-8 text-gray-400" />
+          <div className="col-span-full py-16 bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+              <PackageIcon size={24} className="text-gray-400" />
             </div>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">No hay paquetes registrados</h4>
-            <p className="text-gray-500 max-w-sm">
-              Crea tu primer paquete para comenzar a gestionar tus envíos y recepciones.
+            <h4 className="text-sm font-black text-gray-900 dark:text-white mb-1 uppercase tracking-widest">Nada por aquí</h4>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+              Crea tu primer paquete para gestionar inventario.
             </p>
           </div>
         )}
