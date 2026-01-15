@@ -189,52 +189,52 @@ export default function POSPage() {
                 <div className="flex-1 flex flex-col min-w-0 min-h-0">
 
                     {/* Header: Search & Categories */}
-                    <div className="p-4 bg-white dark:bg-[#1a1c2c] border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 space-y-4">
-                        <div className="flex gap-3">
+                    <div className="p-2 md:p-4 bg-white dark:bg-[#1a1c2c] border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 space-y-2 md:space-y-4">
+                        <div className="flex gap-2 md:gap-3">
                             <div className="relative flex-1 group">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
+                                <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={18} />
                                 <input
                                     type="text"
-                                    placeholder="Buscar producto..."
+                                    placeholder="Buscar..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-2.5 md:py-3.5 bg-slate-100 dark:bg-slate-900 border-none rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-semibold transition-all text-base"
+                                    className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 bg-slate-100 dark:bg-slate-900 border-none rounded-xl md:rounded-2xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-bold transition-all text-sm md:text-base"
                                 />
                             </div>
 
-                            {/* View Mode Toggle */}
-                            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
+                            {/* View Mode Toggle - Only on desktop or slightly larger than tiny mobile */}
+                            <div className="hidden sm:flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                    className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                                 >
-                                    <Grid size={20} />
+                                    <Grid size={18} />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                    className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-brand-500 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                                 >
-                                    <List size={20} />
+                                    <List size={18} />
                                 </button>
                             </div>
 
                             <button
                                 onClick={handleQuickSale}
-                                className="px-4 bg-brand-500/10 text-brand-500 rounded-2xl font-bold flex items-center gap-2 hover:bg-brand-500 hover:text-white transition-all active:scale-95"
+                                className="px-3 bg-brand-500/10 text-brand-500 rounded-xl font-bold flex items-center gap-1.5 hover:bg-brand-500 hover:text-white transition-all active:scale-95"
                                 title="Venta Rápida"
                             >
-                                <Zap size={20} fill="currentColor" />
+                                <Zap size={18} fill="currentColor" />
                                 <span className="hidden sm:inline">Rápida</span>
                             </button>
                         </div>
 
                         {/* Category Tabs */}
-                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 snap-x">
+                        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 snap-x">
                             {categories.map(cat => (
                                 <button
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
-                                    className={`px-4 py-1.5 rounded-xl text-sm font-black whitespace-nowrap transition-all ${selectedCategory === cat
+                                    className={`px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${selectedCategory === cat
                                         ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/25'
                                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                                         }`}
@@ -246,7 +246,7 @@ export default function POSPage() {
                     </div>
 
                     <div
-                        className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 custom-scrollbar pb-[140px] md:pb-6"
+                        className="flex-1 min-h-0 overflow-y-auto p-2 md:p-6 custom-scrollbar pb-[140px] md:pb-6"
                         style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                         {filteredProducts.length === 0 ? (

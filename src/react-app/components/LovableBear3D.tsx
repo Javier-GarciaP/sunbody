@@ -214,12 +214,12 @@ export default function LovableBear3D() {
     };
 
     return (
-        <div className="w-full h-80 relative flex flex-col items-center justify-center animate-fade-in my-8">
+        <div className="w-full h-56 md:h-80 relative flex flex-col items-center justify-center animate-fade-in my-4 md:my-8">
 
             {/* 3D Scene */}
             <div className="w-full h-full absolute inset-0 z-10 transition-transform duration-300 hover:scale-[1.02]">
                 <Canvas shadows dpr={[1, 2]}>
-                    <PerspectiveCamera makeDefault position={[0, 0, 5.5]} fov={45} />
+                    <PerspectiveCamera makeDefault position={[0, 0, 5.5]} fov={isMobile ? 55 : 45} />
 
                     {/* Warmer Lighting */}
                     <ambientLight intensity={0.8} color="#FFF3E0" />
@@ -251,17 +251,19 @@ export default function LovableBear3D() {
             </div>
 
             {/* Speech Bubble Overlay */}
-            <div className="z-20 absolute -top-6 md:right-1/4 pointer-events-none">
-                <div className="animate-bounce-slow bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-6 py-4 rounded-3xl rounded-bl-sm shadow-xl border border-orange-100 dark:border-gray-700 max-w-xs transform hover:scale-105 transition-transform duration-300">
-                    <p className="text-xl font-black bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent text-center leading-tight">
+            <div className="z-20 absolute -top-4 md:-top-6 md:right-1/4 pointer-events-none">
+                <div className="animate-bounce-slow bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm px-4 md:px-6 py-2.5 md:py-4 rounded-2xl md:rounded-3xl rounded-bl-sm shadow-xl border border-orange-100 dark:border-gray-700 max-w-[200px] md:max-w-xs transform hover:scale-105 transition-transform duration-300">
+                    <p className="text-sm md:text-xl font-black bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent text-center leading-tight">
                         "{PHRASES[phraseIndex]}"
                     </p>
                 </div>
             </div>
 
-            <p className="z-20 absolute bottom-2 text-sm font-medium text-orange-400 dark:text-orange-300/60 pointer-events-none animate-pulse">
+            <p className="z-20 absolute bottom-0 md:bottom-2 text-[10px] md:text-sm font-medium text-orange-400 dark:text-orange-300/60 pointer-events-none animate-pulse">
                 ✨ ¡Haz click para amor! ✨
             </p>
         </div>
     );
 }
+
+const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
