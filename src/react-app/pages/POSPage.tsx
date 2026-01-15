@@ -109,13 +109,13 @@ export default function POSPage() {
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
     const handleQuickSale = () => {
-        // Find a generic "Venta Rápida" or "Mostrador" customer
-        const genericCustomer = customers.find(c => c.name.toLowerCase().includes('mostrador') || c.name.toLowerCase().includes('rápida')) || customers[0];
-        if (genericCustomer) {
-            setSelectedCustomerId(genericCustomer.id);
-            setCustomerSearch(genericCustomer.name); // Sync search input
+        if (customers.length > 0) {
+            // Select the last registered customer (highest ID)
+            const lastCustomer = [...customers].sort((a, b) => b.id - a.id)[0];
+            setSelectedCustomerId(lastCustomer.id);
+            setCustomerSearch(lastCustomer.name);
         } else {
-            alert("No hay clientes registrados para venta rápida");
+            alert("No hay clientes registrados");
         }
     };
 
@@ -191,23 +191,23 @@ export default function POSPage() {
                     {/* Header: Search & Categories */}
                     <div className="p-2 md:p-4 bg-white dark:bg-[#1a1c2c] border-b border-slate-200 dark:border-slate-800 shadow-sm z-10 space-y-2 md:space-y-4">
                         <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <div className="relative flex-1 flex items-center">
+                                <Search className="absolute right-3 text-slate-400 no-scale" size={16} />
                                 <input
                                     type="text"
                                     placeholder="Buscar productos..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-bold transition-all text-xs md:text-sm"
+                                    className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-900 border-none rounded-xl text-slate-900 dark:text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 outline-none font-bold transition-all text-xs md:text-sm h-9"
                                 />
                             </div>
 
                             <button
                                 onClick={handleQuickSale}
-                                className="px-3 py-2 bg-brand-500/10 text-brand-500 rounded-xl font-black flex items-center gap-1.5 transition-all active:scale-95 text-[10px] md:text-sm"
+                                className="px-3 py-2 bg-brand-500/10 text-brand-500 rounded-xl font-black flex items-center gap-1.5 transition-all active:scale-95 text-[10px] md:text-sm h-9"
                             >
-                                <Zap size={14} fill="currentColor" />
-                                <span className="hidden xs:inline">Rápida</span>
+                                <Zap size={14} fill="currentColor" className="no-scale" />
+                                <span className="hidden xs:inline">Registrado</span>
                             </button>
                         </div>
 
@@ -235,35 +235,38 @@ export default function POSPage() {
                         {filteredProducts.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                                    <Search size={40} />
+                                    <Search size={40} className="no-scale" />
                                 </div>
-                                <p className="font-bold text-lg">No se encontraron productos</p>
+                                <p className="font-bold text-lg text-[14px]">No se encontraron productos</p>
                             </div>
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                                 {filteredProducts.map(product => (
                                     <div
                                         key={product.id}
-                                        className="group flex flex-col bg-white dark:bg-[#1a1c2c] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 hover:shadow-xl hover:shadow-brand-500/5 transition-all text-left relative overflow-hidden"
+                                        className="group flex flex-col bg-white dark:bg-[#1a1c2c] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 hover:shadow-xl transition-all text-left relative overflow-hidden"
                                     >
                                         <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl mb-3 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform duration-300">
                                             {product.name.toLowerCase().includes('zapato') ? '👟' : '👕'}
                                         </div>
-                                        <h3 className="font-bold text-slate-900 dark:text-white leading-tight text-sm mb-1 truncate" title={product.name}>
+                                        <h3 className="font-bold text-slate-900 dark:text-white leading-tight text-[11px] mb-0.5 truncate" title={product.name}>
                                             {product.name}
                                         </h3>
-                                        <div className="mb-2 font-black text-brand-500 text-lg">
+                                        <div className="mb-2 font-black text-brand-500 text-sm">
                                             ${(product.price_cop / 1000).toLocaleString()}k
                                         </div>
 
                                         {/* Color Variants */}
-                                        <div className="mt-auto flex flex-wrap gap-1.5 grayscale group-hover:grayscale-0 transition-all duration-300">
+                                        <div className="mt-auto flex flex-wrap gap-2">
                                             {product.variants.map((variant: any) => (
                                                 <button
                                                     key={variant.id}
-                                                    onClick={() => addToCart(product, variant)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        addToCart(product, variant);
+                                                    }}
                                                     disabled={variant.stock <= 0}
-                                                    className={`w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center transition-transform hover:scale-110 active:scale-95 hover:z-10 ${variant.stock <= 0 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    className={`w-8 h-8 md:w-8 md:h-8 rounded-full border-2 border-white dark:border-slate-800 shadow-sm flex items-center justify-center transition-transform active:scale-125 touch-manipulation no-mini ${variant.stock <= 0 ? 'opacity-30 grayscale cursor-not-allowed' : 'cursor-pointer'}`}
                                                     style={{ backgroundColor: variant.color_hex }}
                                                     title={`${variant.color_name} (${variant.stock})`}
                                                 >
