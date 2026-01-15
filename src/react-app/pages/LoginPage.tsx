@@ -39,7 +39,7 @@ export const LoginPage = () => {
                     </div>
                     <div className="space-y-2">
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-brand-400 to-purple-500 tracking-tight">
-                            Sumbody
+                            Sunbody
                         </h1>
                         <p className="text-gray-400 font-medium">Panel de Control & Ventas</p>
                     </div>

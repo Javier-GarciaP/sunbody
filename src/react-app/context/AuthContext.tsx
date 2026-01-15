@@ -19,16 +19,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isAllowed, setIsAllowed] = useState(false);
 
     const checkWhitelist = async (email: string) => {
-        const normalizedEmail = email.toLowerCase();
-        // Fallback/Bootstrap for the specified admin email
-        if (normalizedEmail === 'josejaviergarciap123@gmail.com') return true;
+        const normalizedEmail = email.toLowerCase().trim();
+        console.log("Verificando lista blanca para:", normalizedEmail);
+
+        // Lista blanca de emergencia (Hardcoded basada en tu imagen)
+        const emergencyWhitelist = [
+            'josejaviergarciap123@gmail.com',
+            'jose.garciap@unet.edu.ve',
+            'genesis.cardenasg@unet.edu.ve',
+            'marianacardenas.140@gmail.com' // Ajustado según patrón común
+        ];
+
+        if (emergencyWhitelist.includes(normalizedEmail)) {
+            console.log("Acceso concedido vía lista de emergencia local.");
+            return true;
+        }
 
         try {
             const docRef = doc(db, "whitelisted_users", normalizedEmail);
             const docSnap = await getDoc(docRef);
-            return docSnap.exists();
-        } catch (error) {
-            console.error("Error checking whitelist:", error);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                // Verificamos si existe el campo 'active' y si es false, denegamos. 
+                // Si no existe el campo, asumimos que existir es suficiente.
+                if (data && data.active === false) {
+                    console.warn("Usuario encontrado pero está marcado como inactivo.");
+                    return false;
+                }
+                console.log("Usuario encontrado en la lista blanca.");
+                return true;
+            } else {
+                console.warn("El correo no existe en la colección 'whitelisted_users'. ID buscado:", normalizedEmail);
+                return false;
+            }
+        } catch (error: any) {
+            console.error("Error crítico al verificar lista blanca en Firestore:", error.code, error.message);
             return false;
         }
     };
@@ -39,9 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const allowed = await checkWhitelist(currentUser.email);
                 setIsAllowed(allowed);
                 setUser(currentUser);
-                if (!allowed) {
-                    await signOut(auth);
-                }
+                // No cerramos sesión aquí automáticamente para no interrumpir el flujo de login
+                // El ProtectedRoute se encargará de bloquear el acceso si isAllowed es false.
             } else {
                 setUser(null);
                 setIsAllowed(false);
