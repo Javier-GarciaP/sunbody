@@ -395,7 +395,7 @@ export default function POSPage() {
                 )}
 
                 {/* Mobile Bottom Sheet Content */}
-                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[9999] transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} h-[85dvh] flex flex-col shadow-2xl-top`}>
+                <div className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-[#161826] rounded-t-[32px] z-[9999] pb-14 transition-transform duration-500 ease-out transform ${isCartOpen ? 'translate-y-0' : 'translate-y-full'} h-[85dvh] flex flex-col shadow-2xl-top`}>
                     <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-4 shrink-0" />
 
                     <div className="px-6 pb-2 flex justify-between items-center shrink-0">

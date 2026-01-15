@@ -19,11 +19,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isAllowed, setIsAllowed] = useState(false);
 
     const checkWhitelist = async (email: string) => {
-        // Fallback/Bootstrap for the specified admin email if Firestore is empty or not set up yet
-        if (email === 'josejaviergarciap123@gmail.com') return true;
+        const normalizedEmail = email.toLowerCase();
+        // Fallback/Bootstrap for the specified admin email
+        if (normalizedEmail === 'josejaviergarciap123@gmail.com') return true;
 
         try {
-            const docRef = doc(db, "whitelisted_users", email);
+            const docRef = doc(db, "whitelisted_users", normalizedEmail);
             const docSnap = await getDoc(docRef);
             return docSnap.exists();
         } catch (error) {
@@ -34,15 +35,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
-            setUser(currentUser);
             if (currentUser && currentUser.email) {
                 const allowed = await checkWhitelist(currentUser.email);
                 setIsAllowed(allowed);
+                setUser(currentUser);
                 if (!allowed) {
-                    // Optional: Sign out immediately if not allowed, or just let ProtectedRoute handle it.
-                    // Keeping them signed in but "not allowed" is better for debugging "Why am I blocked?"
+                    await signOut(auth);
                 }
             } else {
+                setUser(null);
                 setIsAllowed(false);
             }
             setLoading(false);
@@ -56,15 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const email = result.user.email;
             if (!email || !(await checkWhitelist(email))) {
                 await signOut(auth);
-                throw new Error("Access Denied: You are not on the whitelist.");
+                setIsAllowed(false);
+                throw new Error("Acceso Denegado: No estás en la lista blanca.");
             }
+            setIsAllowed(true);
         } catch (error) {
             console.error("Login failed", error);
             throw error;
         }
     };
 
-    const logout = () => signOut(auth);
+    const logout = () => {
+        setIsAllowed(false);
+        return signOut(auth);
+    };
 
     return (
         <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout, isAllowed }}>
