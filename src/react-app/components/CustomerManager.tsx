@@ -81,7 +81,7 @@ export default function CustomerManager() {
           <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-600">
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-secondary-600 to-secondary-500 text-white rounded-xl shadow-lg shadow-secondary-500/20 hover:shadow-secondary-500/30 hover:scale-[1.02] transition-all duration-200 font-medium ml-auto"
+              className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-400 shadow-brand-500/25 text-white rounded-xl shadow-lg shadow-secondary-500/20 hover:shadow-secondary-500/30 hover:scale-[1.02] transition-all duration-200 font-medium ml-auto"
             >
               <Check className="w-5 h-5" />
               {editingId ? 'Actualizar Cliente' : 'Guardar Cliente'}
