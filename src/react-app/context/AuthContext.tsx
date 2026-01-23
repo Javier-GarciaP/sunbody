@@ -20,7 +20,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const checkWhitelist = async (email: string) => {
         const normalizedEmail = email.toLowerCase().trim();
-        console.log("Verificando lista blanca para:", normalizedEmail);
 
         // Lista blanca de emergencia (Hardcoded basada en tu imagen)
         const emergencyWhitelist = [
@@ -31,7 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ];
 
         if (emergencyWhitelist.includes(normalizedEmail)) {
-            console.log("Acceso concedido vía lista de emergencia local.");
             return true;
         }
 
@@ -47,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     console.warn("Usuario encontrado pero está marcado como inactivo.");
                     return false;
                 }
-                console.log("Usuario encontrado en la lista blanca.");
                 return true;
             } else {
                 console.warn("El correo no existe en la colección 'whitelisted_users'. ID buscado:", normalizedEmail);
