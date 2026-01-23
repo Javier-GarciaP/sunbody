@@ -1,0 +1,9 @@
+
+CREATE TABLE exchange_rate (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cop_to_ves REAL NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO exchange_rate (cop_to_ves) VALUES (7);
