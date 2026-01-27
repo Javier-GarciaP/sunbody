@@ -55,7 +55,11 @@ export function usePackages() {
 
   const deletePackage = async (id: number) => {
     try {
-      await fetch(`/api/packages/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/packages/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const errorData = await response.json() as any;
+        throw new Error(errorData.error || 'Error al eliminar el paquete');
+      }
       setPackages(packages.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error deleting package:', error);

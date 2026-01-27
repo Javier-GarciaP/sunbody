@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import {
     Plus, Check, X, User,
     CheckCircle2, Package as PackageIcon, Truck,
-    DollarSign, Loader2, Trash2
+    DollarSign, Loader2, Trash2, Edit, ChevronDown
 } from 'lucide-react';
 import { useOrders } from '@/react-app/hooks/useOrders';
 import { useProducts } from '@/react-app/hooks/useProducts';
@@ -13,7 +13,7 @@ import { useExchangeRate } from '@/react-app/hooks/useExchangeRate';
 import { useToastContext } from '@/react-app/context/ToastContext';
 
 export default function OrderManager() {
-    const { orders, createOrder, updateItemStatus, closePackageFromOrders, deliverOrderItems, deleteOrder, deleteOrderItem } = useOrders();
+    const { orders, createOrder, updateOrder, updateItemStatus, closePackageFromOrders, deliverOrderItems, deleteOrder, unlinkOrderItem } = useOrders();
     const { products } = useProducts();
     const { customers } = useCustomers();
     const { colors } = useColors();
@@ -44,7 +44,8 @@ export default function OrderManager() {
         items: [] as { product_id: number; color_id: number; quantity: number }[]
     });
 
-    const [batchData, setBatchData] = useState({ name: '', total_ves: 0 });
+    const [batchData, setBatchData] = useState({ name: '', total_ves: 0, packageId: null as number | null });
+    const [batchType, setBatchType] = useState<'new' | 'existing'>('new');
     const [customerSearch, setCustomerSearch] = useState('');
     const [showCustomerList, setShowCustomerList] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -117,16 +118,28 @@ export default function OrderManager() {
             toast.warning("No hay items marcados como comprados");
             return;
         }
-        if (!batchData.name) {
+
+        if (batchType === 'new' && !batchData.name) {
             toast.warning("Escribe un nombre para el paquete");
             return;
         }
 
+        if (batchType === 'existing' && !batchData.packageId) {
+            toast.warning("Seleccione un paquete existente");
+            return;
+        }
+
         try {
-            await closePackageFromOrders(batchData.name, batchData.total_ves, purchasedItems.map(i => i.id));
+            await closePackageFromOrders(
+                batchData.name,
+                batchData.total_ves,
+                purchasedItems.map(i => i.id),
+                batchType === 'existing' ? (batchData.packageId || undefined) : undefined
+            );
             setShowBatchModal(false);
-            setBatchData({ name: '', total_ves: 0 });
-            toast.success("¡Paquete consolidado con éxito!");
+            setBatchData({ name: '', total_ves: 0, packageId: null });
+            setBatchType('new');
+            toast.success(batchType === 'new' ? "¡Paquete consolidado con éxito!" : "¡Items agregados al paquete!");
         } catch (err) {
             console.error(err);
             toast.error("Error al consolidar el paquete");
@@ -187,6 +200,56 @@ export default function OrderManager() {
 
     const pickingItems = useMemo(() => flattenedOrderItems.filter(i => !i.package_id), [flattenedOrderItems]);
 
+    const pickingOrders = useMemo(() => {
+        const groups = orders.filter(o => o.items.some(i => !i.package_id));
+        return groups.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }, [orders]);
+
+    const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>({});
+    const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
+    const [tempOrderData, setTempOrderData] = useState<{
+        prepayment_cop: number;
+        note: string;
+        items: any[];
+    } | null>(null);
+
+    const toggleOrder = (id: number) => {
+        setExpandedOrders(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const startEditing = (order: any) => {
+        setEditingOrderId(order.id);
+        setTempOrderData({
+            prepayment_cop: order.prepayment_cop,
+            note: order.note || '',
+            items: order.items.map((i: any) => ({ ...i }))
+        });
+    };
+
+    const cancelEditing = () => {
+        setEditingOrderId(null);
+        setTempOrderData(null);
+    };
+
+    const saveOrderEdit = async () => {
+        if (!editingOrderId || !tempOrderData) return;
+        try {
+            const order = orders.find(o => o.id === editingOrderId);
+            await updateOrder(
+                editingOrderId,
+                order?.customer_id || null,
+                tempOrderData.items,
+                tempOrderData.note,
+                tempOrderData.prepayment_cop
+            );
+            toast.success("Pedido actualizado");
+            setEditingOrderId(null);
+            setTempOrderData(null);
+        } catch (err) {
+            toast.error("Error al actualizar pedido");
+        }
+    };
+
     const deliveryItemsByCustomer = useMemo(() => {
         const deliverable = flattenedOrderItems.filter(i => i.package_id && i.package_status === 'Entregado');
         const groups: { [key: string]: any[] } = {};
@@ -198,7 +261,6 @@ export default function OrderManager() {
         return groups;
     }, [flattenedOrderItems]);
 
-    const purchasedCount = pickingItems.filter(i => i.is_purchased).length;
 
     return (
         <div className="space-y-6">
@@ -446,10 +508,10 @@ export default function OrderManager() {
                     <div className="flex items-center justify-between px-2">
                         <div className="flex items-center gap-3">
                             <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-semibold rounded-full uppercase tracking-wider">
-                                {purchasedCount} / {pickingItems.length} Adquiridos
+                                {pickingItems.filter(i => i.is_purchased).length} / {pickingItems.length} Adquiridos
                             </span>
                         </div>
-                        {purchasedCount > 0 && (
+                        {pickingItems.filter(i => i.is_purchased).length > 0 && (
                             <button
                                 onClick={() => setShowBatchModal(true)}
                                 className="btn btn-primary py-1.5 text-xs h-auto gap-2"
@@ -459,69 +521,228 @@ export default function OrderManager() {
                         )}
                     </div>
 
-                    <div className="card overflow-hidden shadow-sm">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prenda</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Color</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cant</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Abono</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {pickingItems.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                                            No hay pedidos pendientes de recolección
-                                        </td>
-                                    </tr>
-                                ) : pickingItems.map((item: any) => (
-                                    <tr key={item.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => updateItemStatus(item.id, !item.is_purchased)}
-                                                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${item.is_purchased
-                                                    ? 'bg-emerald-500 text-white shadow-md'
-                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                                                    }`}
-                                            >
-                                                <Check size={18} />
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className={`text-sm font-medium ${!item.customer_id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
-                                                    {item.customer_name || '📦 STOCK TIENDA'}
-                                                </span>
-                                                <span className="text-xs text-slate-500">
-                                                    {new Date(item.order_date).toLocaleDateString()}
-                                                </span>
+                    <div className="space-y-3">
+                        {pickingOrders.length === 0 ? (
+                            <div className="py-20 text-center text-slate-400 card">
+                                No hay pedidos pendientes de recolección
+                            </div>
+                        ) : pickingOrders.map((order: any) => {
+                            const isExpanded = expandedOrders[order.id];
+                            const isEditing = editingOrderId === order.id;
+                            const items = isEditing ? tempOrderData?.items : order.items.filter((i: any) => !i.package_id);
+
+                            return (
+                                <div key={order.id} className="card overflow-hidden transition-all border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md">
+                                    {/* Header (Accordion Toggle) */}
+                                    <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/30">
+                                        <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => toggleOrder(order.id)}>
+                                            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 shadow-sm">
+                                                <User size={18} className="text-slate-500" />
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-200">
-                                            {item.product_name}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full border border-slate-200 dark:border-slate-700" style={{ backgroundColor: item.color_hex }} />
-                                                <span className="text-xs">{item.color_name}</span>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className={`text-sm font-bold ${!order.customer_id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white'}`}>
+                                                        {order.customer_name || '📦 STOCK TIENDA'}
+                                                    </h4>
+                                                    <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500 font-bold">
+                                                        #{order.id}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-0.5">
+                                                    <span className="text-xs text-slate-500">
+                                                        {new Date(order.created_at).toLocaleDateString()}
+                                                    </span>
+                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                                        {items?.length || 0} prendas
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">x{item.quantity}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            {item.order_prepayment > 0 && (
-                                                <span className="text-xs font-semibold px-2 py-1 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 rounded">
-                                                    ${item.order_prepayment.toLocaleString()}
-                                                </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-4">
+                                            {isEditing ? (
+                                                <div className="flex items-center gap-2 pr-4 border-r border-slate-200 dark:border-slate-700">
+                                                    <div className="relative">
+                                                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+                                                        <input
+                                                            type="number"
+                                                            value={tempOrderData?.prepayment_cop || ''}
+                                                            onChange={(e) => setTempOrderData(prev => prev ? { ...prev, prepayment_cop: parseInt(e.target.value) || 0 } : null)}
+                                                            className="input py-1.5 pl-7 text-xs w-28 bg-white dark:bg-slate-900 focus:scale-105 transition-transform"
+                                                            placeholder="Abono"
+                                                        />
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <button onClick={saveOrderEdit} className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors shadow-sm">
+                                                            <Check size={16} />
+                                                        </button>
+                                                        <button onClick={cancelEditing} className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                                            <X size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-4 pr-4 border-r border-slate-200 dark:border-slate-700">
+                                                    <div className="text-right">
+                                                        <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest">Abonado</span>
+                                                        <span className="text-sm font-bold text-emerald-600">
+                                                            ${order.prepayment_cop?.toLocaleString() || '0'}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); startEditing(order); }}
+                                                        className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all"
+                                                        title="Editar Pedido"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); if (confirm('¿Eliminar pedido?')) deleteOrder(order.id); }}
+                                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
+                                                        title="Eliminar Pedido"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+
+                                            <button
+                                                onClick={() => toggleOrder(order.id)}
+                                                className={`p-2 text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                            >
+                                                <ChevronDown size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Items List (Accordion Content) */}
+                                    {isExpanded && (
+                                        <div className="p-4 bg-white dark:bg-slate-900/50 animate-slide-down">
+                                            {isEditing && (
+                                                <div className="mb-4">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Referencia / Nota</label>
+                                                    <input
+                                                        type="text"
+                                                        value={tempOrderData?.note || ''}
+                                                        onChange={(e) => setTempOrderData(prev => prev ? { ...prev, note: e.target.value } : null)}
+                                                        className="input py-1.5 text-xs w-full mb-3"
+                                                        placeholder="Nota..."
+                                                    />
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <h6 className="text-[10px] font-bold text-slate-400 uppercase">Artículos</h6>
+                                                        <button
+                                                            onClick={() => setTempOrderData(prev => prev ? { ...prev, items: [...prev.items, { product_id: 0, color_id: 0, quantity: 1, is_purchased: false, package_id: null }] } : null)}
+                                                            className="text-[10px] text-blue-500 font-bold hover:underline"
+                                                        >
+                                                            + Añadir Artículo
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-3">
+                                                {items?.map((item: any, idx: number) => (
+                                                    <div key={idx} className={`flex items-center gap-4 p-3 rounded-xl border ${item.is_purchased ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800' : 'bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800'}`}>
+                                                        {!isEditing && (
+                                                            <button
+                                                                onClick={() => updateItemStatus(item.id, !item.is_purchased)}
+                                                                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${item.is_purchased
+                                                                    ? 'bg-emerald-500 text-white shadow-md'
+                                                                    : 'bg-white dark:bg-slate-700 text-slate-300 border border-slate-200 dark:border-slate-600'
+                                                                    }`}
+                                                            >
+                                                                <Check size={14} />
+                                                            </button>
+                                                        )}
+
+                                                        <div className="flex-1 flex flex-col md:flex-row md:items-center gap-3">
+                                                            {isEditing ? (
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1">
+                                                                    <select
+                                                                        className="select py-1 text-xs"
+                                                                        value={item.product_id}
+                                                                        onChange={(e) => {
+                                                                            const newItems = [...tempOrderData!.items];
+                                                                            newItems[idx].product_id = parseInt(e.target.value);
+                                                                            setTempOrderData({ ...tempOrderData!, items: newItems });
+                                                                        }}
+                                                                    >
+                                                                        <option value="0">Producto...</option>
+                                                                        {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                                    </select>
+                                                                    <select
+                                                                        className="select py-1 text-xs"
+                                                                        value={item.color_id}
+                                                                        onChange={(e) => {
+                                                                            const newItems = [...tempOrderData!.items];
+                                                                            newItems[idx].color_id = parseInt(e.target.value);
+                                                                            setTempOrderData({ ...tempOrderData!, items: newItems });
+                                                                        }}
+                                                                    >
+                                                                        <option value="0">Color...</option>
+                                                                        {colors.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                                    </select>
+                                                                    <div className="flex gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            value={item.quantity}
+                                                                            onChange={(e) => {
+                                                                                const newItems = [...tempOrderData!.items];
+                                                                                newItems[idx].quantity = parseInt(e.target.value) || 1;
+                                                                                setTempOrderData({ ...tempOrderData!, items: newItems });
+                                                                            }}
+                                                                            className="input py-1 text-xs w-20 text-center"
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const newItems = tempOrderData!.items.filter((_, i) => i !== idx);
+                                                                                setTempOrderData({ ...tempOrderData!, items: newItems });
+                                                                            }}
+                                                                            className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="flex-1">
+                                                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.product_name}</span>
+                                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                                            <div className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: item.color_hex }} />
+                                                                            <span className="text-[10px] text-slate-500 font-medium uppercase">{item.color_name}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="text-right">
+                                                                            <span className="block text-[8px] text-slate-400 font-bold uppercase">Cant</span>
+                                                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">x{item.quantity}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {items?.length === 0 && (
+                                                    <div className="py-4 text-center text-slate-400 text-xs italic">
+                                                        No hay artículos en este pedido
+                                                    </div>
+                                                )}
+
+                                                {order.note && !isEditing && (
+                                                    <div className="mt-4 p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-lg">
+                                                        <span className="text-[10px] font-bold text-blue-500 uppercase block mb-1">Nota del Pedido</span>
+                                                        <p className="text-xs text-slate-600 dark:text-slate-400 italic">"{order.note}"</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -574,14 +795,18 @@ export default function OrderManager() {
                                                 </div>
                                                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => {
-                                                            deleteOrderItem(item.id);
-                                                            toast.remove("Item eliminado del pedido");
+                                                        onClick={async () => {
+                                                            try {
+                                                                await unlinkOrderItem(item.id);
+                                                                toast.success("Cantidad reducida");
+                                                            } catch (err) {
+                                                                toast.error("Error al remover item");
+                                                            }
                                                         }}
-                                                        className="p-1 text-slate-400 hover:text-red-500 rounded"
-                                                        title="Remover"
+                                                        className="p-1 text-slate-400 hover:text-amber-500 rounded transition-colors"
+                                                        title="Reducir cantidad"
                                                     >
-                                                        <Trash2 size={12} />
+                                                        <X size={14} />
                                                     </button>
                                                     <div className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: item.color_hex }} />
                                                 </div>
@@ -644,33 +869,78 @@ export default function OrderManager() {
             {/* Modals */}
             {showBatchModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-                    <div className="card w-full max-w-sm shadow-2xl p-6">
-                        <h3 className="text-lg font-semibold mb-4">Consolidar Paquete</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Nombre del Paquete</label>
-                                <input
-                                    type="text"
-                                    autoFocus
-                                    value={batchData.name}
-                                    onChange={(e) => setBatchData({ ...batchData, name: e.target.value })}
-                                    className="input w-full"
-                                    placeholder="Ej. Paquete Enero #1"
-                                />
+                    <div className="card w-full max-w-sm shadow-2xl p-0 overflow-hidden">
+                        <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <h3 className="text-lg font-semibold">Consolidar Paquete</h3>
+                            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg mt-4">
+                                <button
+                                    onClick={() => setBatchType('new')}
+                                    className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${batchType === 'new' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                                >
+                                    Nuevo
+                                </button>
+                                <button
+                                    onClick={() => setBatchType('existing')}
+                                    className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${batchType === 'existing' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                                >
+                                    Existente
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Total Costo (VES) Opcional</label>
-                                <input
-                                    type="number"
-                                    value={batchData.total_ves || ''}
-                                    onChange={(e) => setBatchData({ ...batchData, total_ves: parseInt(e.target.value) || 0 })}
-                                    className="input w-full"
-                                    placeholder="0"
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-4">
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {batchType === 'new' ? (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5 px-1">Nombre del Paquete</label>
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            value={batchData.name}
+                                            onChange={(e) => setBatchData({ ...batchData, name: e.target.value })}
+                                            className="input w-full"
+                                            placeholder="Ej. Paquete Enero #1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5 px-1">Total Costo (VES) Opcional</label>
+                                        <input
+                                            type="number"
+                                            value={batchData.total_ves || ''}
+                                            onChange={(e) => setBatchData({ ...batchData, total_ves: parseInt(e.target.value) || 0 })}
+                                            className="input w-full"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5 px-1">Seleccionar Paquete</label>
+                                    <select
+                                        className="select w-full"
+                                        value={batchData.packageId || ''}
+                                        onChange={(e) => setBatchData({ ...batchData, packageId: parseInt(e.target.value) || null })}
+                                    >
+                                        <option value="">Seleccione un paquete...</option>
+                                        {packages
+                                            .filter(p => p.status !== 'Entregado')
+                                            .map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name} ({p.items.reduce((acc: number, i: any) => acc + i.quantity, 0)} uds)
+                                                </option>
+                                            ))}
+                                    </select>
+                                    <p className="mt-2 text-[10px] text-slate-400 font-medium px-1">
+                                        * Solo se muestran paquetes que aún no han sido recibidos.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-2">
                                 <button onClick={() => setShowBatchModal(false)} className="btn btn-ghost flex-1">Cancelar</button>
-                                <button onClick={handleClosePackage} className="btn btn-primary flex-1">Crear</button>
+                                <button onClick={handleClosePackage} className="btn btn-primary flex-1">
+                                    {batchType === 'new' ? 'Crear' : 'Agregar'}
+                                </button>
                             </div>
                         </div>
                     </div>

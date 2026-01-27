@@ -232,7 +232,12 @@ app.delete("/api/customers/:id", async (c) => {
 // Package Routes
 app.get("/api/packages", async (c) => {
   const db = c.env.DB;
-  const { results: packages } = await db.prepare("SELECT * FROM packages ORDER BY created_at DESC").all();
+  const { results: packages } = await db.prepare(`
+    SELECT p.*, 
+    (SELECT COUNT(*) FROM sale_items si WHERE si.package_id = p.id) as sales_count
+    FROM packages p 
+    ORDER BY created_at DESC
+  `).all();
 
   const packagesWithItems = await Promise.all(packages.map(async (pkg: any) => {
     const { results: items } = await db.prepare(`
@@ -375,67 +380,67 @@ app.put("/api/packages/:id", async (c) => {
   try {
     const { name, items, status, total_ves } = await c.req.json();
 
+    // 1. Get current state (before update)
     const currentPkg: any = await db.prepare("SELECT status FROM packages WHERE id = ?").bind(id).first();
+    if (!currentPkg) return c.json({ error: "Paquete no encontrado" }, 404);
 
-    // 1. Handle Status Change Logic (Stock Management)
-    if (status && status !== currentPkg.status) {
-      if (status === 'Entregado') {
-        // Adding to stock
-        const { results: currentItems } = await db.prepare("SELECT * FROM package_items WHERE package_id = ?").bind(id).all();
-        for (const item of currentItems) {
-          // Ensure variant exists in inventory
-          const variant = await db.prepare("SELECT 1 FROM product_variants WHERE product_id = ? AND color_id = ?")
-            .bind((item as any).product_id, (item as any).color_id).first();
+    const { results: oldItemsRaw } = await db.prepare("SELECT * FROM package_items WHERE package_id = ?").bind(id).all();
+    const oldItems = oldItemsRaw as any[];
 
-          if (!variant) {
-            await db.prepare("INSERT INTO product_variants (product_id, color_id, stock) VALUES (?, ?, ?)")
-              .bind((item as any).product_id, (item as any).color_id, 0).run();
-          }
-
-          await db.prepare(`
-            UPDATE product_variants 
-            SET stock = stock + ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE product_id = ? AND color_id = ?
-          `).bind((item as any).quantity, (item as any).product_id, (item as any).color_id).run();
-        }
-      } else if (currentPkg.status === 'Entregado') {
-        // Removing from stock (Reverting)
-        const { results: currentItems } = await db.prepare("SELECT * FROM package_items WHERE package_id = ?").bind(id).all();
-        for (const item of currentItems) {
-          await db.prepare(`
-            UPDATE product_variants 
-            SET stock = stock - ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE product_id = ? AND color_id = ?
-          `).bind((item as any).quantity, (item as any).product_id, (item as any).color_id).run();
-        }
+    // 2. If it WAS delivered, revert old stock
+    if (currentPkg.status === 'Entregado') {
+      for (const item of oldItems) {
+        await db.prepare(`
+          UPDATE product_variants 
+          SET stock = stock - ?, updated_at = CURRENT_TIMESTAMP 
+          WHERE product_id = ? AND color_id = ?
+        `).bind(item.quantity, item.product_id, item.color_id).run();
       }
     }
 
-    // 2. Update Package Details (Name, total_ves)
-    if (name !== undefined || total_ves !== undefined) {
-      const pkg: any = await db.prepare("SELECT name, total_ves FROM packages WHERE id = ?").bind(id).first();
-      const finalName = name !== undefined ? name : pkg.name;
-      const finalTotalVes = total_ves !== undefined ? total_ves : pkg.total_ves;
+    // 3. Update Package Details
+    const finalName = name !== undefined ? name : undefined;
+    const finalTotalVes = total_ves !== undefined ? total_ves : undefined;
+    const finalStatus = status !== undefined ? status : currentPkg.status;
 
-      await db.prepare("UPDATE packages SET name = ?, total_ves = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    if (name !== undefined || total_ves !== undefined) {
+      await db.prepare("UPDATE packages SET name = COALESCE(?, name), total_ves = COALESCE(?, total_ves), updated_at = CURRENT_TIMESTAMP WHERE id = ?")
         .bind(finalName, finalTotalVes, id).run();
     }
 
-    // 3. Update Status
-    if (status) {
-      await db.prepare("UPDATE packages SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(status, id).run();
+    if (status !== undefined) {
+      await db.prepare("UPDATE packages SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(status, id).run();
     }
 
     // 4. Update Items (Only if items array is provided)
     if (items && Array.isArray(items)) {
-      // Delete old items
       await db.prepare("DELETE FROM package_items WHERE package_id = ?").bind(id).run();
-
-      // Insert new items
       for (const item of items) {
         await db.prepare(
           "INSERT INTO package_items (package_id, product_id, color_id, quantity) VALUES (?, ?, ?, ?)"
         ).bind(id, item.product_id, item.color_id, item.quantity).run();
+      }
+    }
+
+    // 5. If it IS NOW delivered (or stayed delivered), apply new stock
+    if (finalStatus === 'Entregado') {
+      const { results: currentItemsRaw } = await db.prepare("SELECT * FROM package_items WHERE package_id = ?").bind(id).all();
+      for (const item of currentItemsRaw as any[]) {
+        // Ensure variant exists
+        const variant = await db.prepare("SELECT 1 FROM product_variants WHERE product_id = ? AND color_id = ?")
+          .bind(item.product_id, item.color_id).first();
+
+        if (!variant) {
+          await db.prepare("INSERT INTO product_variants (product_id, color_id, stock) VALUES (?, ?, 0)")
+            .bind(item.product_id, item.color_id).run();
+        }
+
+        await db.prepare(`
+          UPDATE product_variants 
+          SET stock = stock + ?, updated_at = CURRENT_TIMESTAMP 
+          WHERE product_id = ? AND color_id = ?
+        `).bind(item.quantity, item.product_id, item.color_id).run();
       }
     }
 
@@ -458,8 +463,24 @@ app.delete("/api/packages/:id", async (c) => {
   const db = c.env.DB;
   const id = c.req.param("id");
 
+  // 1. Get package info
   const pkg: any = await db.prepare("SELECT status FROM packages WHERE id = ?").bind(id).first();
+  if (!pkg) return c.json({ error: "Paquete no encontrado" }, 404);
 
+  // 2. Check for sales (sale_items)
+  const saleItem: any = await db.prepare("SELECT 1 FROM sale_items WHERE package_id = ? LIMIT 1").bind(id).first();
+  if (saleItem) {
+    return c.json({ error: "No se puede eliminar un paquete que ya tiene ventas registradas." }, 400);
+  }
+
+  // 3. Check for orders (order_items)
+  const orderItem: any = await db.prepare("SELECT 1 FROM order_items WHERE package_id = ? LIMIT 1").bind(id).first();
+  if (orderItem) {
+    return c.json({ error: "No se puede eliminar un paquete que está vinculado a pedidos. Primero debes liberar los artículos del pedido." }, 400);
+  }
+
+  // 4. Everything is clear, proceed with deletion
+  // If it was delivered, revert stock first
   if (pkg.status === 'Entregado') {
     const { results: items } = await db.prepare("SELECT * FROM package_items WHERE package_id = ?").bind(id).all();
 
@@ -472,8 +493,10 @@ app.delete("/api/packages/:id", async (c) => {
     }
   }
 
+  // Delete items and package
   await db.prepare("DELETE FROM package_items WHERE package_id = ?").bind(id).run();
   await db.prepare("DELETE FROM packages WHERE id = ?").bind(id).run();
+
   return c.json({ success: true });
 });
 
@@ -798,6 +821,29 @@ app.patch("/api/orders/items/:id", async (c) => {
   return c.json({ success: true });
 });
 
+app.post("/api/orders/items/:id/unlink", async (c) => {
+  const db = c.env.DB;
+  const id = c.req.param("id");
+
+  try {
+    const item: any = await db.prepare("SELECT * FROM order_items WHERE id = ?").bind(id).first();
+    if (!item) return c.json({ error: "Item del pedido no encontrado" }, 404);
+    if (!item.package_id) return c.json({ success: true, message: "No vinculado a paquete" });
+
+    // If quantity > 1, just decrement. Otherwise delete.
+    if (item.quantity > 1) {
+      await db.prepare("UPDATE order_items SET quantity = quantity - 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(id).run();
+    } else {
+      await db.prepare("DELETE FROM order_items WHERE id = ?").bind(id).run();
+    }
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 app.delete("/api/orders/items/:id", async (c) => {
   const db = c.env.DB;
   const id = c.req.param("id");
@@ -823,16 +869,71 @@ app.delete("/api/orders/:id", async (c) => {
   }
 });
 
-app.post("/api/orders/batch-package", async (c) => {
+app.put("/api/orders/:id", async (c) => {
   const db = c.env.DB;
-  const { name, total_ves, itemIds } = await c.req.json();
+  const id = c.req.param("id");
+  const { customer_id, items, note, prepayment_cop } = await c.req.json();
 
   try {
-    // 1. Create the package
-    const pkgResult = await db.prepare(
-      "INSERT INTO packages (name, total_ves, status) VALUES (?, ?, ?)"
-    ).bind(name, total_ves, 'Armado').run();
-    const packageId = pkgResult.meta.last_row_id;
+    await db.prepare(
+      "UPDATE orders SET customer_id = ?, note = ?, prepayment_cop = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+    ).bind(customer_id, note || null, prepayment_cop || 0, id).run();
+
+    if (items && Array.isArray(items)) {
+      // For simplicity, we delete items not in packages and re-insert.
+      // If items have package_id, they stay.
+      await db.prepare("DELETE FROM order_items WHERE order_id = ? AND package_id IS NULL").bind(id).run();
+
+      for (const item of items) {
+        if (!item.package_id) {
+          await db.prepare(
+            "INSERT INTO order_items (order_id, product_id, color_id, quantity, is_purchased) VALUES (?, ?, ?, ?, ?)"
+          ).bind(id, item.product_id, item.color_id, item.quantity, item.is_purchased ? 1 : 0).run();
+        }
+      }
+    }
+
+    const order = await db.prepare(`
+      SELECT o.*, c.name as customer_name
+      FROM orders o
+      LEFT JOIN customers c ON o.customer_id = c.id
+      WHERE o.id = ?
+    `).bind(id).first();
+
+    const { results: itemsList } = await db.prepare(`
+      SELECT oi.*, pb.name as product_name, col.name as color_name, col.hex_code as color_hex
+      FROM order_items oi
+      JOIN products_base pb ON oi.product_id = pb.id
+      JOIN colors col ON oi.color_id = col.id
+      WHERE oi.order_id = ?
+    `).bind(id).all();
+
+    return c.json({ ...order, items: itemsList });
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+app.post("/api/orders/batch-package", async (c) => {
+  const db = c.env.DB;
+  const { name, total_ves, itemIds, packageId: existingPackageId } = await c.req.json();
+
+  try {
+    let packageId = existingPackageId;
+    let isAlreadyDelivered = false;
+
+    if (!packageId) {
+      // 1. Create the package
+      const pkgResult = await db.prepare(
+        "INSERT INTO packages (name, total_ves, status) VALUES (?, ?, ?)"
+      ).bind(name, total_ves, "Armado").run();
+      packageId = pkgResult.meta.last_row_id;
+    } else {
+      // Check existing package status
+      const pkg: any = await db.prepare("SELECT status FROM packages WHERE id = ?").bind(packageId).first();
+      if (!pkg) throw new Error("Paquete no encontrado");
+      isAlreadyDelivered = pkg.status === "Entregado";
+    }
 
     // 2. Link order items to this package
     for (const itemId of itemIds) {
@@ -841,18 +942,45 @@ app.post("/api/orders/batch-package", async (c) => {
       ).bind(packageId, itemId).run();
     }
 
-    // 3. Create package items (aggregated from order items)
+    // 3. Create or update package items (aggregated from order items)
     const { results: aggregatedItems } = await db.prepare(`
       SELECT product_id, color_id, SUM(quantity) as total_quantity
       FROM order_items
-      WHERE id IN (${itemIds.map(() => '?').join(',')})
+      WHERE id IN (${itemIds.map(() => "?").join(",")})
       GROUP BY product_id, color_id
     `).bind(...itemIds).all();
 
     for (const item of aggregatedItems) {
-      await db.prepare(
-        "INSERT INTO package_items (package_id, product_id, color_id, quantity) VALUES (?, ?, ?, ?)"
-      ).bind(packageId, item.product_id, item.color_id, item.total_quantity).run();
+      const existingPI: any = await db.prepare(
+        "SELECT id, quantity FROM package_items WHERE package_id = ? AND product_id = ? AND color_id = ?"
+      ).bind(packageId, item.product_id, item.color_id).first();
+
+      if (existingPI) {
+        await db.prepare(
+          "UPDATE package_items SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+        ).bind(item.total_quantity, existingPI.id).run();
+      } else {
+        await db.prepare(
+          "INSERT INTO package_items (package_id, product_id, color_id, quantity) VALUES (?, ?, ?, ?)"
+        ).bind(packageId, item.product_id, item.color_id, item.total_quantity).run();
+      }
+
+      // 4. Update inventory if already delivered
+      if (isAlreadyDelivered) {
+        const variant = await db.prepare("SELECT 1 FROM product_variants WHERE product_id = ? AND color_id = ?")
+          .bind((item as any).product_id, (item as any).color_id).first();
+
+        if (!variant) {
+          await db.prepare("INSERT INTO product_variants (product_id, color_id, stock) VALUES (?, ?, ?)")
+            .bind((item as any).product_id, (item as any).color_id, 0).run();
+        }
+
+        await db.prepare(`
+          UPDATE product_variants 
+          SET stock = stock + ?, updated_at = CURRENT_TIMESTAMP 
+          WHERE product_id = ? AND color_id = ?
+        `).bind((item as any).total_quantity, (item as any).product_id, (item as any).color_id).run();
+      }
     }
 
     return c.json({ success: true, packageId });

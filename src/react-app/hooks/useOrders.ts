@@ -33,6 +33,22 @@ export function useOrders() {
         }
     };
 
+    const updateOrder = async (id: number, customer_id: number | null, items: { product_id: number; color_id: number; quantity: number; is_purchased: boolean; package_id: number | null }[], note?: string, prepayment_cop?: number) => {
+        try {
+            const response = await fetch(`/api/orders/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer_id, items, note, prepayment_cop: prepayment_cop || 0 })
+            });
+            const updatedOrder = await response.json();
+            setOrders(orders.map(o => o.id === id ? updatedOrder : o));
+            return updatedOrder;
+        } catch (error) {
+            console.error('Error updating order:', error);
+            throw error;
+        }
+    };
+
     const updateItemStatus = async (itemId: number, isPurchased: boolean) => {
         try {
             await fetch(`/api/orders/items/${itemId}`, {
@@ -49,12 +65,12 @@ export function useOrders() {
         }
     };
 
-    const closePackageFromOrders = async (name: string, totalVes: number, itemIds: number[]) => {
+    const closePackageFromOrders = async (name: string, totalVes: number, itemIds: number[], packageId?: number) => {
         try {
             const response = await fetch('/api/orders/batch-package', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, total_ves: totalVes, itemIds })
+                body: JSON.stringify({ name, total_ves: totalVes, itemIds, packageId })
             });
             if (!response.ok) throw new Error('Error closing package');
             await fetchOrders();
@@ -89,6 +105,17 @@ export function useOrders() {
         }
     };
 
+    const unlinkOrderItem = async (itemId: number) => {
+        try {
+            const response = await fetch(`/api/orders/items/${itemId}/unlink`, { method: 'POST' });
+            if (!response.ok) throw new Error('Error unlinking item');
+            await fetchOrders();
+        } catch (error) {
+            console.error('Error unlinking order item:', error);
+            throw error;
+        }
+    };
+
     const deleteOrderItem = async (itemId: number) => {
         try {
             await fetch(`/api/orders/items/${itemId}`, { method: 'DELETE' });
@@ -96,9 +123,6 @@ export function useOrders() {
                 ...o,
                 items: o.items.filter(i => i.id !== itemId)
             })).filter(o => o.items.length > 0 || o.prepayment_cop > 0));
-            // Keep order if it has items or a prepayment (maybe?)
-            // Actually, if an order becomes empty it's better to refresh or let the filter handle it.
-            // But if all items are gone, should the order vanish? Probably yes if no prepayment.
         } catch (error) {
             console.error('Error deleting order item:', error);
             throw error;
@@ -109,5 +133,5 @@ export function useOrders() {
         fetchOrders();
     }, []);
 
-    return { orders, loading, createOrder, updateItemStatus, closePackageFromOrders, deliverOrderItems, deleteOrder, deleteOrderItem, refresh: fetchOrders };
+    return { orders, loading, createOrder, updateOrder, updateItemStatus, closePackageFromOrders, deliverOrderItems, deleteOrder, deleteOrderItem, unlinkOrderItem, refresh: fetchOrders };
 }

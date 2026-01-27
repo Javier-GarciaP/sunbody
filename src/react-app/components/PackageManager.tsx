@@ -389,19 +389,26 @@ export default function PackageManager() {
                 </button>
                 <button
                   onClick={() => {
-                    if (pkg.status === 'Entregado') {
-                      toast.warning('No se pueden eliminar paquetes ya recibidos');
+                    const hasSales = (pkg.sales_count || 0) > 0;
+
+                    if (pkg.status === 'Entregado' && hasSales) {
+                      toast.warning('No se pueden eliminar paquetes que ya tienen ventas registradas.');
                       return;
                     }
+
                     confirmModal.showConfirm({
                       title: '¿Eliminar paquete?',
-                      message: `¿Estás seguro de que deseas eliminar el paquete "${pkg.name}"? Esta acción no se puede deshacer.`,
+                      message: `¿Estás seguro de que deseas eliminar el paquete "${pkg.name}"? ${pkg.status === 'Entregado' ? 'Esto revertirá la carga de inventario.' : ''} Esta acción no se puede deshacer.`,
                       confirmText: 'Eliminar',
                       cancelText: 'Cancelar',
                       variant: 'danger',
                       onConfirm: async () => {
-                        await deletePackage(pkg.id);
-                        toast.remove('Paquete eliminado');
+                        try {
+                          await deletePackage(pkg.id);
+                          toast.success('Paquete eliminado');
+                        } catch (error: any) {
+                          toast.error(error.message || 'Error al eliminar el paquete');
+                        }
                       }
                     });
                   }}

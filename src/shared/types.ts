@@ -43,6 +43,7 @@ export interface Package {
   name: string;
   total_ves: number;
   status: 'Armado' | 'Enviado' | 'Entregado';
+  sales_count?: number;
   created_at: string;
   updated_at: string;
 }

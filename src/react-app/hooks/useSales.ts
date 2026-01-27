@@ -8,10 +8,19 @@ export function useSales() {
   const fetchSales = async () => {
     try {
       const response = await fetch('/api/sales');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setSales(data);
+      if (Array.isArray(data)) {
+        setSales(data);
+      } else {
+        console.error('API returned non-array data for sales:', data);
+        setSales([]);
+      }
     } catch (error) {
       console.error('Error fetching sales:', error);
+      setSales([]);
     } finally {
       setLoading(false);
     }

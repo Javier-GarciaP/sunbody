@@ -33,4 +33,4 @@ DELETE FROM sqlite_sequence WHERE name IN (
 );
 
 -- Vacuum to optimize
-VACUUM;
+-- VACUUM;

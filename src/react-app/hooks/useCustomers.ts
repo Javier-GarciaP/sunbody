@@ -8,10 +8,19 @@ export function useCustomers() {
   const fetchCustomers = async () => {
     try {
       const response = await fetch('/api/customers');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setCustomers(data);
+      if (Array.isArray(data)) {
+        setCustomers(data);
+      } else {
+        console.error('API returned non-array data for customers:', data);
+        setCustomers([]);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
